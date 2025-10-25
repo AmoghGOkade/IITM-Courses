@@ -1,0 +1,428 @@
+2 ways to represent:- (directed means 'a' connected to 'b' does not imply 'b' connected to 'a')
+
+adjacency matrix - value is 0 if i,j are not connected, 1 otherwise.
+Pros - can tell if I,j are connected immediately.
+Cons - if you want to do operations with all conncted vertices, you have to iterate through all unconnected ones also.
+
+adjacency list - dictionary having key as all vertices, value of each vertex is a list with all vertices it is connected to.
+Cons - if you want to tell whether i is connected to j, you have to iterate through all connected vertices of the key.
+Pros - if you want to do operations on all connected vertices, you don't need to look through all vertices (you can skip the unconnected ones).
+
+
+
+2 ways to traverse a graph (to find reachable neighbours) - Both are O[n^2] using adj_mat and O[m+n] using adj_list (where 2m is the sum of all degrees of vertices, that is m is the number of edges.)
+
+BFS - looks one level at a time, spreads out evenly instead of committing to a path.
+Pros - doesn't use recursion and easier to do, can tell you shortest (by number of edges needed) path
+Cons - lesser functionality
+
+Uses a queue. Add the start node to the queue and iteratively add its neighbours to the queue if they have not been visited (after removing the parent node) after updating important information
+I am pretty sure we can use a stack also (actually maybe not, it may mess with the shortest path if we use a stack)
+
+DFS - commits to a path till the end, then it backtracks to the most recent vertex that has an unexplored edge
+Cons - uses recursion, so more complicated. Doesn't give you shortest path
+Pros - more functionality
+
+The recursion uses a stack implicitly.
+Can do it by returning dictionaries and all, but better to do using global dictionaries.
+
+Applications - 
+
+to check if a graph has any disconnected components and list all vertices in a component (start BFS/DFS from node 0, visit all connected nodes. This is component 0. Then start BFS/DFS from smallest un-visited node and visit all connected nodes. This is component 1. And so on, till all nodes are visited.)
+
+Detecting cycles in a graph (for DFS, make that pre/post tree. Any edge that is on the graph but not on the tree leads to a cycle (in non directed). In directed, any back edge on the graph but not on the tree leads to a cycle).
+
+
+
+DAGs (Directed Acyclic Graphs):- used to represent a sequence (of tasks), for something that can only be done after something else and so on. It is directed because, if it is non directed, if 'a' has to be done before 'b', then 'b' has to also be done before 'a'. It is acyclic because 'a' has to be done before 'b' and 'b' has to be done before 'c', but eventually when you come back in the cycle, 'c' has to be done before 'a'.
+
+indegree - number of dependencies
+
+Applications -
+
+Topological sorting (one of the feasible sequences to complete the task) - Choose (in any way) one of the tasks having 0 indegree, put it into the final list and subtract the indegree of its connected nodes by 1. Continue till all nodes are put in the list or you can run the loop equal to the number of vertices (because you have to append all once).
+
+Longest path - minimum number of days needed to complete the entire job if you can do any number of tasks having no pending dependencies in a day. It gives you a dictionary having the keys as the nodes and the value as the minimum number of days needed to complete the job.
+
+
+
+
+W5
+
+Shortest path in weighted graphs :- (Cannot have negative cycles, because we can go around that cycle indefinitely to make cost as - infinity.
+
+Representation - The adjacency matrix has a tuple having 2 elements - 1st one is 0 or 1 to represent whether or not there is an edge; 2nd one is the weight of that edge.
+The adjacency list is a dictionary with the keys having the nodes and the values having a list of tuples. Each tuple has 2 elements - 1st one is the edge that you can reach from the key and the 2nd one is the weight of that edge.
+
+
+
+Single source shortest path - 
+
+
+
+Cannot have negative edges.  Uses Dijkstra's algorithm.
+Algorithm - Set all shortest times as infinity (a number surely more than time taken to burn all vertices). Burn the start vertex and update all values of its neighbours from infinity. Take the vertex that has the least shortest time (that is not necessarily connected to the current vertex) and burn it. Then update the values of all its unburnt neighbours (a finite value could reduce because of this). Repeat.
+Returns a dictionary having keys as the vertices and values as the shortest path from the start vertex based on weight.
+O(n^2) for both Wmat and Wlist.
+
+
+Can have negative edges - Uses Bellman Ford algorithm.
+Algorithm - Update the shortest path of all vertices from all edges. It should settle after at most n-1 times.
+Can also use this to check for negative cycles. If nth iteration causes a change, there is a negative cycle.
+
+
+
+All pair shortest paths - Uses Floyd Warshall algorithm
+algorithm - shortest path between i and j using edges from 0 to k = min(shortest path between i and j using edges from 0 to k-1, shortest path between i and k-1 using edges from 0 to k-1 + shortest path between k-1 and j using edges from 0 to k-1)
+Basically, when you are given a certain vertex that you can use, you either don't use it to form your shortest path (keep the path same as before), or you go through it for your shortest path.
+Using adj list has no benefit over adj matrix, because we are literally saying 'for every pair of vertices, update the shortest path', so we are not really dealing with the connecting edges.
+
+
+
+Minimum cost spanning tress -
+
+What is a tree - if we add an edge to a tree, we get a loop. If we remove an edge, we get an unconnected graph.
+A tree is a connected acyclic graph. A tree of n vertices has n-1 edges.
+
+We want to remove the least weight of the edges from a graph such that we get a tree (such that every vertex is reachable from every vertex).
+
+
+
+Prim's algorithm - Start with either (the smallest weighted edge of the graph) or (the smallest edge leaving any vertex). Then grow a tree by selecting the next best edge that doesn't create a cycle or a disconnected component.
+
+Proof that the smallest edge from a given vertex (and thus the smallest edge overall) will be in the tree - "Minimum separator Lemma" (proof of the Lemma is in the video).
+
+Lemma: 'in 2 disconnected components, the edge going between the components is the minimum possible edge between the components'.
+Take 1 component as any vertex and the other component as the rest of the vertices. Therefore, the smallest edge leaving any vertex always comes in the tree.
+
+
+
+Kruskal's algorithm - For every smallest edge that has not been checked, add it if it doesn't create a cycle (that is, if it doesn't connect two vertices having the same component). Otherwise skip it.
+
+
+If edge weights repeat, minimum cost spanning trees (MCST) are not unique.	
+
+
+
+
+
+W6
+
+L1:-
+Using a different data structure for making Kruskal's faster:-
+
+3 operations with components were there -
+
+1) Make - component[i] = i , which was O(n)
+2) Find - O(1) because component[i] is the thing we want to find
+3) Union - O(n) because we have to see all n vertices and check whether they belong to component_old.
+For all n union operations (n-1 because we need to make n-1 tree edges), total is O(n^2).
+
+So, we will keep 3 dictionaries component, size and member, where member[i] is a list of all nodes having component i.
+
+1) and 2) are same, but 3) is O(n) for 1 operation, but amortized is O(n*log n) for n operations. 
+Why size is needed - to make sure that we don't waste time making the larger component as the smaller component (compare the size of the components that are being merged and assign c_old and c_new accordingly).
+
+So, overall, Kruskal's is O((m+n)*log n) where O(m log m) = O(m log n) is because of the initial sort needed and O(n log n) is because of the union. (m is the number of edges and m <= n^2)
+
+
+L2:-
+We can use a structure called priority queue to bring complexity of (finding the largest element in a list, while also being able to insert elements into it). This was used in Dijkstra's and Prim's.
+If not ordered - Insert was O(1) and del_max was O(n)
+If ordered - Insert was O(n) and del_max was O(1).
+In both cases, n operations were O(n^2/2) = O(n^2).
+
+If we use a n^0.5 x n^0.5 matrix (every row is ordered), insert becomes O(n^0.5) and del_max becomes O(n^0.5). So, for n operations, O(n*n^0.5) = O(n^1.5)
+We can do in O(n log n) with heaps.
+
+
+L3:-
+Binary tree - each node has atmost 2 children - left or right.
+Size - number of nodes
+Height - number of levels
+
+Heaps - binary trees with some constraints
+1. It is filled level by level, from left to right (only the last level can have an empty node, that too only from the right).
+2. A node has a value greater than or equal to its children.
+
+Insert - Put the given node into the unique spot where a new node can come. If its parent is less than the added child, swap them. Repeat till the new node is less than the parent.
+Insert is O(log n), which is the order of the number of levels, where n is the number of nodes.
+
+Del_max - Put the last inserted node as the root. Then swap it with the biggest of the two children till it has no children or till its children are smaller than it.
+Del_max is also O(log n).
+
+
+How to represent a heap - 
+Use a list, with index numbers being the order that the nodes were inserted in.
+Children of H[i] are H[2*i+1] and H[2*i + 2].
+Parent of H[i] is H[(i-1)//2]
+
+How to make a heap given a list:-
+M1 - Take the 1st element, put it as the root, take the 2nd element, put it in place and swap if needed. O(n log n).
+M2 - Assume the list is a heap. Starting from the bottom, start fixing a parent and 2 of its children (by swapping the biggest child if needed) and any levels below it. AGP gives O(n).
+
+
+L4:-
+Update value in a min_heap:-
+If the value is to be reduced, check its value with its parent and keep swapping till it is the root, or its parent is lesser than it.
+If the value has to be increased, swap it (it either of its child is smaller than it) with the smaller of the two children, till it is a leaf or both its children are more than it.
+O(log n) per neighbour.
+
+
+How to link a node to a value in the heap:-
+Keep 2 lists, VtoH and HtoV.
+VtoH - the value at the ith index is the position (index) in the heap where the distance of the ith vertex is stored.
+HtoV - the value at the ith index is the vertex whose distance is stored at the ith heap index.
+
+Heap sort - build a heap in O(n) and del_max n times with O(log n) each time. So, complexity - O(n + n log n) = O(n log n).
+To have better space complexity, we can put the maximum value to the end of the heap array (because when we del_max, 1 node is freed up).
+
+
+L5:-
+Search tree:- Left of a node has all values lesser than it and right of a node has all values that are more than it. No duplicate values are allowed.
+To represent, we use a kind of linked list structure, where every node is a list of 3 indices (value, left and right).
+
+insert, find and delete all go down only 1 path.
+In an unbalanced tree, it is O(n).
+In a balanced tree, it is O(log n).
+
+
+
+
+W7:-
+
+L1:-
+How to balance trees - based on size or height? Ans is height.
+What is balancing based on height - The height of the left and right trees should differ by at most 1 level. Called AVL trees.
+
+Minimum size height balanced tree - For a given height, find minimum number of nodes possible.
+A tree of height h has a tree of height h-1 as the left subtree and of height h-2 as the right subtree.
+S(h), the size of the smallest height balanced tree grows exponentially with h.
+So, the height, h = O(log n), where n is the number of nodes.
+
+Slope = self.left.height() - self.right.height()
+slope should either be 0, -1 or 1.
+When inserting or deleting, slope can becomes 2 or -2 also.
+Left rotation can convert -2 slope to {0, 1 or 2} and right rotation can convert 2 slope to {-2, -1 or 0}.
+
+Sometimes, two rebalancings are needed to fix a slope of +2 or -2.
+(See properly a question on insertion of elements to make an AVL tree)
+
+Instead of computing the height every time (takes O(n)), we can store a self.height variable.
+
+
+L2:-
+Interval scheduling - suppose a bunch of profs need to use a classroom for different intervals of time, how to allot it to which profs such that most profs are happy?
+Ans (so sexy) - choose those profs whose work ends earliest out of the available bookings and rule out any profs whose interval overlaps with the chosen one.
+O(n log n)
+
+
+L3:-
+Minimizing lateness - suppose all jobs have to be completed. Job i has deadline Di and takes Ti time. Lateness, Li = time after deadline that you finish the job. How do we minimize Lmax = max(Li)?
+Ans - finish off the jobs that have the 1st (earliest) deadlines first.
+
+
+L4:-
+Fixed length encoding - English has 26 alphabets, so to represent it in binary, we need 5 bits.
+
+Variable length encoding - Some letters are used more often than others, so we can keep a smaller number of bits for them, but more bits for infrequent letters.
+Eg:- Morse Code - e is 0, t is 1, a is 01. So, if they send 0101, we cannot know whether it is aa, etet, aet, or eta without spaces in between.
+
+Prefix code - Make sure that the sequence for any symbol (alphabet) is not a prefix for some other symbol, so that if we recognize a sequence, we can just write that symbol down, because we know that any other symbol can't be sent using the sent sequence as a prefix.
+Eg:- a = 11, e = 01, i = 001, o = 10, u = 000
+
+If we have the frequency of letter i = fi (out of 1) and the number of bits needed to encode letter i = |Ei| (where Ei is the encoded version of the alphabet i), we can calculate the average number of bits needed per letter as ABL (average bit length) = sum(fi x |Ei|)
+
+
+
+We can represent these alphabets as leaves of a binary tree, where going to a left child means 0 and going to a right child means 1. To find the encode for an alphabet, go to it from the root.
+For most optimum algorithm (minimum ABL), the tree is a full tree (a node has either 0 or 2 children).
+
+Huffman's algorithm - Keep combining the 2 least frequent alphabets into a single alphabet having frequency equal to the sum of the individual alphabets, till there are only 2 (compound) alphabets left. Make these 2 alphabets the children of the root. Then keep disintegrating these compound alphabets in the same way they were combined till there are no compound alphabets left.
+Complexity - If we store frequencies in an array, O(k^2); if we store frequencies in a heap, O(k log k), where k is the number of alphabets needed to encode.
+
+
+
+
+W8:-
+L1:-
+Counting inversions - Comparing two friend's tier lists - the actual score is not important, what is important is the number of inversions (if i like A more than B, but my friend likes B more than A, the set {A,B} is an inversion).
+Greedy is - go through all movies in my friend's list one by one and check whether there is a number bigger than it to its left (if my permutation of movies is fixed as 1,2,3,...). O(n^2).
+
+To reduce complexity, use a merge sort like approach while incrementing a variable count with the leftover size of the left array whenever you pick an element from the right array.
+
+
+L2:-
+To find the closest pair of points in a 2D space, we use a merge sort like process, where we split everything above the y axis as the first list and everything below the y axis as the right list. We also need to keep 2 lists Px and Py having all x and y co-ordinates in sorted order. 
+While merging, let d be the minimum among the minimum distances in the 2 halves. Search in a horizontal band of 2d (d to the left and right of the separator) for cross points that might be closer than d to each other.
+
+Better to watch video again to understand.
+
+Complexity - O(n log n) (brute force - O(n^2) by going through all pairs of points individually)
+
+
+
+L3:-
+Binary division is normally O(n^2), because we have to add 2 n-bit numbers n-1 times.
+Karatsuba's algorithm - If we do a smart divide and conquer (watch video), we can bring it down to O(n^1.59) = O(n^log3)
+
+
+
+L4:-
+In a recurrence tree, if level i has r^i nodes, each with value f(n/c^i), that is, if we divide an operation involving n things into r of the same operations involving n/c things, T(n) = r*T(n/c) + f(n)
+T(n) = sum(r^i x f(n/c^i))
+3 cases -
+1) if r<c (binary search: r=1, c=2) - i=0 term dominates and T(n) = O(f(n))
+2) r==c (merge sort: r=2, c=2) - all terms contribute similarly and T(n) = O(f(n) x L) = O(f(n) x log n), where L is the number of levels (c^L = n and O(logc n) = O(log n))
+3) if r>c (Karatsuba: r=3, c=2) - i=L term dominates and T(n) = O(r^L) = O(n^logc r)
+(These formulas can be derived by explicitly solving the recursion T(n) = r*T(n/c) + f(n))
+
+
+L5:-
+Quick select - To find the kth largest element in a list of length n:-
+We can sort and access kth with O(n log n).
+But, if k=1 or n, we can do it in O(n). So, if we do it k times after dropping the largest element each time, we can do it in O(kn). But, this is O(n^2) for median (k=n/2).
+If we can find median in O(n), we can guarantee quicksort in O(n log n)
+
+Median of medians - ensures that a value chosen is close to the centre of the list (never the max or min element, it doesn't always choose the median). Basically, divide the list into parts of 5 elements and find the median of those 5 elements. Then, make a list of those medians and divide into parts of 5 elements and repeat until the list has only 5 elements and the median of that list is the median of medians (MoM).
+It gives you a value between 3/10 and 7/10 index of the list.
+O(n).
+
+Makes quick select as O(n) and guarantees quick sort to be O(n log n). But, the overhead of MoM makes quicksort slower in the long run.
+Helps to find the exact median in O(n).
+
+
+
+
+W9:-
+
+L1:-
+Weighted interval scheduling - instead of looking for a greedy strategy, we can 'look for an inductive solution which is "obviously" correct'.
+Order the bookings by start time - b1, b2, b3, ...
+Consider 2 solutions:
+1) Include b1 - rule out other bookings that overlap with it and solve the remaining bookings (subproblem) in a similar way.
+2) Exclude b1 and solve the subproblem b2, b3, b4, ... in a similar way.
+Take the maximum of both cases inductively.
+Why this works - never rules out any case.
+
+Inductive solution can generate same subproblem at different stages. Recursion evaluates each instance of a subproblem from scratch.
+Eg - Fibonacci - fib(5) = fib(4) + fib(3). While computing fib(4), we had already computed fib(3). But in recursion, it will compute again.
+
+
+
+L2:- Store a computed value in a memory table. Check the table everytime we make a recursive call and if it is not there, only then compute - Memoization.
+Put the value of fib_table[i] in a dictionary.
+
+Dynamic programming - anticipate all subproblems you need (they for a DAG) and solve them bottom up (you never need to solve a recursion).
+Memoization - top to bottom.
+
+
+
+L3:- Grid paths can be solved using inclusion-exclusion (permutation and combination). (l+b)!/(l!*b!) (all identical right steps and all identical upward steps, total number of steps is length + breadth).
+Can solve it using inductive method (DP or memoization):
+no_of_paths (i, j) = no_of_paths(i, j-1) + no_of_paths(i-1, j)
+Consider (0,0) as 1 possible way.
+Also fix any blockage to have no_of_paths = 0.
+
+Memoization vs DP:-
+If you have blockades (holes) just inside the border (so that you are forced to reach only via the 2 extreme paths), memoization better.
+But even then, 'wasteful' DP better, because there are no recursive losses (calls and rets).
+
+
+L4:- Common subwords and subsequences.
+Naive approach takes O(m * n^2).
+Inductive - LCW(i, j) = 1 + LCW(i+1, j+1); if ai=bj
+	LCW(i, j) = 0 if ai != bj
+where LCW is Longest Common Subword.
+Base case - LCW(m,n) = 0
+
+Inductive is O(mn)
+
+
+Longest common subsequence:-
+If ai = bj, LCS(i, j) = 1 + LCS(i+1, j+1)	//consider (ai, bj) is a part of the LCS
+Else - both cannot be a part of the LCS. Solve LCS(i, j+1) and LCS(i+1, j) and take the maximum.
+Base case - LCS(m ,n) = 0
+O(mn)
+
+
+
+L5:-
+Edit distance/Levenshtein distance
+Applications - Suggestions for spelling corrections, genetic (DNA) similarity of species
+Edit can be done to the source or to the target, but it is symmetric, so we do it only in one direction. LCS equivalent is the edit distance without substitution.
+If ai == bj, ED(i, j) = ED(i+1, j+1)
+If ai != bj, ED(i, j) = 1 + min[ED(i+1,j+1), ED(i+1,j), ED(i,j+1)] :-
+for the 3 cases - substitute ai by bj, delete ai, insert bj before ai
+
+Base cases - ED(m, n) = 0
+		ED(i, n) = m-i (when 2nd string is empty, delete all i elements from the 1st string)
+		ED(m, j) = n-j (when 1st string is empty, insert all n-j remaining elements from 2nd string to 1st string)
+O(mn)
+
+
+
+
+
+W11:- 
+L1-3:- If there are constraints, draw them on a graph with the variables as the axes and check the end-points of the convex region. This is called a simplex solution for linear programming and is similar to that CBSE math topic we had.
+
+
+
+L4:- Ford-Fulkerson's algorithm. Add any flow, reduce the possible capacity and make a reverse edge that can have the reverse capacity that the pipe can take, given that the forward flow added before is happening. Continue till there are no feasible paths left from source -> sink.
+Max flow is always equal to the min cut.
+Ford Fulkerson can take time proportional to the maximum flow, so use BFS to use O(m*n).
+
+
+
+L5:- Bipartite matching. Can use network flows to solve, by setting all edge capacities to 1.
+This is an example for reduction. Convert a problem A into a problem B for which we know the algorithm, using a preprocess and a postprocess.
+Looks kind of like Laplace transform multiplication for solving time domain convolution lol.
+
+
+
+L6:- If we search all possible solutions (brute force), it grows exponentially with the number of solutions. Not all problems admit efficient solutions that need not search all possible cases. I don't know what he wanted to say in the video, but it was about checking algorithms being sometimes simpler than generating the solution. If it is not, we can ask a kind of different question and find the proper Q to ask, provided someone is generating answers for us.
+Independent set and vertex cover are complements of each other.
+
+
+
+L7:- NP is the problems that have an efficient checking solution. P is the problems whose solution can be generated in polynomial time. P is included in NP, because to check a problem that can be solved in polynomial time, i can generate a solution on my own and see whether the solutions are the same.
+The question is, are there problems outside P that can be NP (checked in polynomial time)? Yes (like the teacher factorization and all problems discussed this week).
+Cook-Levin theorem - Every problem in NP can be reduced to SAT.
+SAT reduces to 3-SAT.
+All NP problems are inter-reducible.
+
+
+
+
+
+W12:-
+L1:- For pattern matching (continuous substring to be found in a bigger string), brute force is, check every letter of the string and the subsequence. If a mismatch is found, move the pointer to the next character of the string and start checking again.
+O(mn) where n,m are lengths of pattern and string.
+
+
+
+L2:- To speed it up, we can use Boyer-Moore Algorithm.
+Start the search by checking the last element of the substring and the nth element of the string (backwards search). When a mismatch is found - 
+1) If the mismatched character appears in the substring, move the right-most occurrence of the character to align with the string's mismatched character.
+2) If it does not occur in the sub-string, move the substring to align with the letter after the character that does not occur.
+If the subsequence is correct, move the substring by 1 character to the right (because aa occurs twice in aaa).
+Worst case remains O(mn)
+
+
+
+L3:- Rabin-Karp Algorithm - convert the strings into a number. Because comparing two slices (of a list) of length m takes O(m), but comparing 2 numbers of any size takes O(1).
+For a set of large alphabets, even thought we have to do calculations with base k (arithmetic becomes big), we can take a number and do modulo to check whether two sequences have the same modulo. If they don't have the same modulo, they are not the same, but if they have the same modulo, we have to explicitly check to see if they are the same (false positives).
+O(mn) if all blocks have the same remainder with the modulo.
+If the alphabet is small enough to not need modulo arithmetic, O(m+n).
+Preprocessing is O(m).
+
+
+
+L4:- Automata - make an FSM of the substring that says which state having the longest match you will go back to when you encounter the next alphabet. So that when you find a mismatch, you don't need to go back to the 1st character of your substring and then start matching again, but instead, you can go back to the longest match.
+String matching takes O(n), but making the FSM takes O(m^3 . number of letters in your alphabet) by brute force.
+
+
+
+L5:- Knuth-Morris-Pratt algorithm computes the FSM in O(m). So, string matching becomes O(m+n).
+But, Boyer Moore is used in in-built softwares even though O(mn) (just like quick sort is used even thought worst case O(n^2)).
