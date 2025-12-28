@@ -1,0 +1,136 @@
+Week 1:-
+When ML:- When manual labour or programming is not possible/feasible (drawing boxes around faces in camera while clicking, weather forecast)
+
+Supervised learning:-
+Regression - Used to predict something given some data. Given no. of rooms, area and distance from metro, predict cost of house.
+Classification - Used to classify as a YES or NO given some data. Predict if no. of rooms in a house is more than 3 or not (YES or NO) given area and price.
+See formula for loss in both cases.
+
+Training data should not be used for evaluation. Because a model that hardcodes the output for the training data will gain an unfair advantage in evaluation.
+Is it always linear (a x1 + b x2 + c x3)? No. The order (relation) of the terms used should be given by human. Validation data used for this it seems.
+
+Unsupervised learning:-
+Dimensionality reduction - Gives an encoder and decoder for compressing data to be transmitted easily. Basically, compression (not necessarily lossless). Eg:- If a guy needs to report to his boss about all Coca-Cola tweets in the week, he can't look at the millions of tweets there are. But, he can classify it into like 10 classes and report those.
+Density estimation - Given some data point, it will give the probability that it has come from some source. Given some tweet, it will tell what the probability that it has come from some guy is. Can also be used to generate a tweet looking like something that that guy generated. Can also be used for face generation.
+See loss functions for both of these.
+
+
+
+Week 2:-
+L1:- Taught condition for calling a sequence convergent. Taught dot product in vector representation. Taught formal definition of a function. Taught contour plots (and heat map) of 2-D functions.
+L2:- Taught some weird formulations of continuity and differentiability. Taught geometrical representation of differentiability.
+L3:- Derived Taylor's expansion to 1st order from the differentiation definition.
+L4:- Did higher order Taylor's expansion. Did product rule and chain rule.
+L5:- Talked about lines and planes in higher dimensions. Gave partial derivative formula and grad (gradient) formula.
+L6:- Did multi-variable Taylor's expansion to the 1st order. He did directional derivative, descent and some random stuff in between.
+Tut1:- Did Qs on Taylor's and directional derivative.
+
+
+
+Week 3:-
+L1:- Taught some weird 4 subspaces thing; their definition and some example for how to solve them.
+L2:- Did orthogonal vectors and orthogonal subspaces.
+L3:- He did projection onto a line.
+L4:- Did projection onto a space and its properties.
+L5:- He explained the least squares formula and did what was essentially a question on least squares.
+Tut1:- Very good Q for finding column space, rank, null space, nullity, row space and left null space.
+Tut2:- 2 good Qs.
+Tut3:- 3 Qs.
+See all. Takes very less time.
+
+
+
+Week 4:-
+L1:- Derived least squares using loss function. Gave maximum likelihood approach formula. Did polynomial regression. Did ridge regression.
+L2:- Derived eigenvalue equation. Did some Qs (examples).
+L3:- Did diagonalization and told when a matrix A is diagonalizable. He also made some good remarks.
+L4:- Nice derivation for approximation of Fibonacci using eigenvalues and eigenvectors.
+L5:- Did orthogonal diagonalization.
+Tut1:- Very good Q for quadratic (2nd degree) fitting.
+Tut2:- Q for finding eigenvalues and eigenvectors.
+
+
+
+Week 5:-
+L1:- Did complex conjugate, inner product, conjugate transpose and all (basically basic complex numbers).
+L2:- Did Hermitian matrices; proved that if A is Hermitian, eigenvalues are real, and eignevectors for distinct eigenvalues are orthogonal.
+L3:- Did unitary matrix, showed magnitude of eigenvalue is 1 and eignevectors for distinct eigenvalues are orthogonal.
+L4:- Proved that any Hermitian matrix is unitarily diagonalizable (for n = 3).
+L5:- Proved that any Hermitian matrix is unitarily diagonalizable for any n.
+Tut1:- Did a few Qs.
+
+
+
+Week 6:-
+L1:- Did spectral theorem and a Q (recap). Did SVD, proof of why every matrix is SVD. Made some useful remarks.
+L2:- Did standard Q on SVD.
+L3:- Did positive definiteness and some special cases for ax^2 + 2bxy + cy^2. Did not tell condition for if stationary point is min/max/saddle point (compute determinant of Hessian).
+L4:- Did positive definiteness in a matrix and proved that both conditions are equivalent.
+Tut1:- Told what 'rank' means in SVD and gave some real-life example. Gave numbers for how it saves storage space and tried explaining the intuition of why it works in a picture.
+Tut2:- Did some geometrical interpretation of SVD, which I couldn't understand, because I wasn't able to hear (and there were no subtitles).
+Tut3:- Told how to find max/min/saddle based on Hessian's sign. Taught different types of definiteness (which came in ass, but not in lectures).
+
+
+
+Week 7:-
+L1:- Did PCA. Taught the optimal x~i and J* also.
+L2:- Taught proper method to solve PCA question. Did good Q also.
+L3:- Taught how to maximize variance using PCA. Did good Q also.
+L4:- Did trick for reducing computation if d >> n.
+Tuts:- Not available.
+
+
+
+Week 8:-
+L1:- Talked about 3 pillars of ML.
+L2:- Gave the general form of an optimization problem.
+L3:- Talked about direction to regress to the minimum and said that we have to figure out 'amount' along with direction.
+L4:- Taught how to take step size to regress to the minima.
+L5:- Taught properties of gradient descent (local minimum).
+L6:- Proved why d = -f'(xt) is valid.
+L7:- Did gradient descent in higher dimensions.
+L8:- Taught why d = -grad[f(xt)] is the best.
+Tut1:- Did Newton's method and numericals to compare it with gradient descent.
+
+
+
+Week 9:-
+L1:- Told broad condition for checking if claimed optimal x* is actually optimal.
+L2:- Told grad(f(x*)) and grad(g(x*)) are anti-parallel. Also did for case when constraint is g(x)=0 (The grads can be parallel or anti-parallel).
+L3:- Did good Q. Did projected gradient descent.
+L4:- Did convex sets' definition.
+L5:- Did intersection of convex sets, convex combinations, 2 definitions of convex hulls and Euclidean balls.
+L6:- Did 4 definitions of convex functions.
+L7:- Proved that if f is convex, all local minima are global minima.
+Tut1:- Basically revised full theory from Lagrange multipliers to convex functions. Did 2 Very Good Qs on Lagrange multipliers (optimization) and 2 Good Qs on finding if function is convex or not. See.
+
+
+
+Week 10:-
+L1:- Did more properties of convex functions - all global minima are continuous; sum of convex functions is convex; composite of convex functions is convex under certain conditions on one of the functions.
+L2:- Found analytical solution for best linear regression function (by minimizing error using convex functions). Told that it is O[n^3] (expression had inverse computation), so we use gradient descent and talked about stochastic gradient descent.
+L3:- Gave expression for Lagrangian (constrained optimization) and introduced primal and dual problems.
+L4:- Did strong duality and gave the 4 KKT conditions.
+L5:- Gave formulation for support vector machine (SVM) problem.
+Tut1:- Did Very Good Q on KKT conditions, told 3 types of solutions - infeasible, unbounded, bounded. Then did some random primal <-> dual stuff.
+
+
+
+Week 11:-
+L1:- Did basic PDF and CDF for a continuous random variable.
+L2:- Did Very Good Q on conditional PDF. Did very basic Q on functions of random variables.
+L3:- Did definition and some properties of expectation and two Qs. Did variance, properties and a Q. Did conditional expectation, total probability theorem and a Very Good Q.
+L4:- Did joint PDF, CDF and a Q. Did marginal and conditional PDFs and a Q. Did independence of RVs and a Q.
+L5:- Did sum of 2 RVs, max of 2 RVs, min of 2 RVs and a Good Q for each. Did covariance and correlation.
+L6:- Did transformation of RVs and a Very Good Q.
+L7:- Did uniform, exponential (mentioned memoryless, min of 2 exponential RVs), std. normal and normal RVs.
+Tut1:- Did some Good Qs on basic joint PDF. See.
+
+
+
+Week 12:-
+L1:- Did bivariate and multivariate normal derivations.
+L2:- Did maximum log likelihood for Bernoulli, Uniform, Normal mean, Normal mean and variance.
+L3:- Did Gaussian mixture model and then some random thing I didn't understand.
+L4:- Did Markov inequality and a Q; Chebyshev inequality; Hoeffding inequality; convergence in prob and distribution; WLLN; CLT.
+Tut1:- Did some Good Qs. See.
