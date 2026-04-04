@@ -1,0 +1,262 @@
+19.2.26
+I was so confused as to how I should start, so I just put 1u for all components lmao. Now, I can sit and tune (it ran yay).
+So you can apparently see DC operating points using the maestro of the testbench; I think you need to open the print windown by clicking on your symbol and then 'e' into it and then click the MOSFET.
+
+20.2.26
+I put fricking expressions and the S11 plot was at 1GHz, not 3.5GHz. And it was peaking T-T.
+So I put values and changing Ld did not do shit. Mostly problem is with Lg and Ls only.
+So changing Ls also didn't do much. But it whooshed when I changed Lg.
+Oh wow, netaccess expired and the simulation just hung midway nice.
+So 1 good thing (keeping aside that it is peaking, not dipping) is that increasing Lg does decrease the peaking frequency.
+Increased wn, but it went to sub-threshold. Will increase Id also.
+Increased Id, but S11 graph is still peaking only.
+So there is no other crest/trough anywhere else; only the peak.
+I even increased Rb and moved it to the right of Lg; no change.
+At this point, I can't help but believe I am making some mistake wrt the input port settings.
+So the output port initially was set to the input port (only for noise analysis), but after I changed it also, no luck.
+I am just directly going to try with my differential one and hope it works.
+****ing hell, I was worrying for nothing. It came normally only in the differential one.
+Wtf, simulations not running only. It says simulating and then after 100 years, it says waiting for available license and stalls more. Then runs after a billion years.
+Anyhow, increasing Cgs seemed to have changed the f0, which makes me think if I am missing some capacitances that should be included from the operating point.
+Hmm, it also seems like Zreal depends on the value of Lg (its resistance) as well T-T. That is, lower Lg => lower Zin.
+So I can control the centre frequency by changing Lg. Still not able to match Real(Zm) though.
+Values: gm=1.468m * 5, cgs=19.34f * 6.2, cds=3.509f, Ls=50/(gm/cgs + 3.1416*f0/10), Lg and Ld same, wn=10u, ld=60u; gives 3.5G f0, 223Ohms Rin
+Ohh, so for Ls=0, I still get 144Ohms Rin, so probably Lg too high.
+I have to decrease Lg, without chaning f0. So, I have to increase the real Cgs also.
+Ok, seems like I am in the right direction; For Ls=0, cgs=47.08f * 6.8, cds=7.919f, wn=30u, ld=60u; gives 3.5G f0, 97Ohms Rin
+For Ls=0, cgs=89.14f * 7.0, wn=60u, id=100u; 3.5G f0, 56Ohms Rin
+OMG, increasing Id decreased both f0 and Rin.
+And increasing Ls pushes the centre frequency front; apart from increasing Rin.
+
+21.2.26
+Ok, so I am at least getting impedance matched values:- Ls=230.7p, Lg=18.92n-Ls, wn=60u, Id=180u; gives around 50.3Ohms Rin and S11 between -16 and -21dB. Will have to see how screwed up the gain and NF sims are (not even going to think about iip3/ p1dB for now).
+Insane, NF is like 1.2dB (under 2dB). So probably Gain gone (and gain flatness).
+Every fricking time I add a plot to ADE, the license wait for 10000 years happens; maybe I should just not have anything in the ADE plots.
+Ok yea S21 is cooked, it is like 5.7-5.8dB. But I will do AC analysis and see.
+Hmm, gain is also like 5.7dB. Are S21 and AC gain same? Seems like.
+Gain flatness seems to work out; but I need to increase gain.
+Let me check once more if I have all params, because this is a good checkpoint.
+Also wtf happened to my S11? It still meets the speck (-15 to -23dB), but it seems a lot more sharper than I remember (now peak is like -44dB, but I remember it was like -27dB). Is it because I changed the port from DC to AC?
+Also my centre shifted to like 3.52, but I should be able to tune it. I feel like I should focus on gain 1st.
+Hmm, to increase gain, I should decrease w (may make Rin impossible) or increase Id. Probably will try both and see from this checkpoint. Also increasing gain will just decrease the noise factor. What will I lose? Flatness?
+Hmm, I should also see if changing Ld affects the gain (and flatness). That is 1 param I just haven't tuned, because it didn't affect Zin/S11.
+Wow, changing Ld did nothing! Ok, so decreasing Ld beyond a point worsnes A and NF, but increasing it beyond that point does nothing.
+Seems like I will have to increase Id or decrease W.
+Hmm, so increasing Id did shift the f0, Rin (can fix easily), but it also increased gain (and decreased NF). The gain flatness is much worse, but I think if i increase Id properly, I can meet everything except iip3.
+Apparently not, increasing Id a lot after a point only imporves gain a bit. But, I will still try to find a stable point with an insane Id; can optimise using W later.
+Ok nvm, after a point, for very high Id, A stagnates a lot and if you increase it too much, if falls a lot because the main NMOS goes to triode.
+w = 60u, Ld=59.38n:- (For Rin=50, f0=3.5)
+Id=0.5m; Ls=240p, Lg=17.7n-Ls; A=12.0dB, NF=0.90dB, flat=0.4dB
+Id=1.0m; Ls=175p, Lg=17.2n-Ls; A=16.0dB, NF=0.80dB, flat=0.4dB
+Id=2.0m; Ls=130p, Lg=16.9n-Ls; A=19.2dB, NF=0.75dB, flat=0.4dB
+Id=3.0m; Ls=115p, Lg=16.8n-Ls; A=20.5dB, NF=0.75dB, flat=0.4dB
+Id=4.0m; Ls=105p, Lg=16.7n-Ls; A=21.3dB, NF=0.75dB, flat=0.4dB
+Frickkk, I should have been lazy and done sweep with Iin before only; you can see good increase in gain from 1 to 2, decent from 2 to 3, but after that, all were in the same place only, except for the decrease at like 8 or 9.
+Will have to check iip3 for Id=3, 4, 5 and 6m; and also all params if iip3 turns out fine. Then we have a stable operating point to submit. Then maybe optimize on Id with w.
+Hmm, so it actually does have a sub -10dBm iip3 point (-16.13dBm). But, the non-linearity that BS and the pdf got is not seen, so I am not sure if it is correct. I think with power optimization, we will be able to see the non-linearities.
+I though increasing mxham to 5 will help in showing the non-linearity, but apparently not (mxham is the no. of harmonics the simulator uses).
+But if it is, then I think we have an operating point for 3m. Will have to see how everything changes for changes in Id and Ld, but I think we can submit at least something.
+Hmm, it actually looks like everything passes, but I will still ask Jaival. Maybe check his chat for the values, so I won't write it here.
+I still need to see the effect of Ld (for Viva); basically something that controls gain flatness. Oh wait, sir taught that the minimum one limits it; interesting, maybe Ld won't affect it at all till it becomes the minimum one. I also need to optimize for Id, because I am pretty sure 3m is horrible.
+
+26.2.26
+So my IIP3 spec doesn't meet, and I am not able to correct it by increasing Id (it is nearly constant). All this is after ****ing up my AIC quiz horribly. I want to cry.
+Ok, it seems like 3m and above is the near zero point for gm3 (after the -ve peak). That's why it is constant. Iip3 kept decreasing with decrease in Id before 3mA. The highest IIP3 value I got is like -10.6dB at like 1.5mA.
+I have 2 options: 1. Play around with params for 3mA and see what does what to IIP3 (maybe Wncasc like Jaival said) 2. Go to a lower W and hope IIP3 changes for better. 
+Oh also, that bullshit change from a balun to a VCVS is also there that I have to see.
+Ok Rishi Nanda replied immediately (thank you). Adding that thing made IIP3 less (-12.something db); changed Rin to like 70, made gain higher (to like 30db).
+While changing Ls (to get Rin 50), I realized that it is not at all shifting my f0 now.
+Cha, after setting Ls to 30p, only IIP3 is still bothering me. It is like -15dB. But, since I have enough NF and gain, maybe I can change up Id and see how it hits the IIP3. Also, Rin's flatness is concerning me.
+Hmm, so I am able to go down to 0.5mA also with like insane margins for NF and A still. But IIP3 bothers me, it basically doesn't follow trends that sir taught. Also did Id always shift Rin? Makes sense actually because Wt depends on gm.
+For now though, I am going back to microamps and checking how low I can go without hitting NF/A/subthreshold. And what happens to IIP3.
+Wow, for w=60u. I am getting Rin as 56Ohms even for Ls=0. Will increasing Id help? Did I just completely overlook increasing Id to decrease Rin? But it should increase Rin wtf?
+It actually does. Why again does increasing Id decrease the minimum Rin? Can't reason that oh Wt increases if Id increases, because Ls=0. Ehh whatever I guess.
+Ok so it looks like, for Wn=60u, Id=200u: Ls=186p, Lg=19.2n-Ls, Ld=59.387n, all specs are met by a mile. Except 1. Bloody IIP3. Getting like -21dBm now T-T. Not sure where I am on the gm3 vs Id curve now.
+Like what do I even do? Randomly go to random Ids, fix all params again and then fricking think about where I am on the gm3 vs Id curve?
+Hmm, so for Id=200u, Ld above 50n did not do anything at all to anything. Ok, so any acceptable Ld does not affect IIP3. What it may help in, is to sacrifice gain flatness for some gain. Not really worth tweaking too much, but it is a thing.
+So at least from 200u to 500u, IIP3 is continuously decreasing. So, it must decrease more. But then Rin and f0 are also changing; maybe it will actually pull the IIP3 back to -21dBm when I fix Rin and f0? I can actually see this by fixing Rin and f0 for 500u and seeing the IIP3 then.
+When fixed for 200uA, 500uA gave -17.7dBm.
+Ok, it did seem to play around when I was tweaking Ls and Lg, but it was largely similar only. Final value was -17.46dBm.
+Around 900uA, it reaches a min (-13.9dBm). Probably the negative min of gm3, because after that, it largely decreases till it hits the -18 to -19dBm. If I can't find a value better than -10dBm around this 900uA, I feel the best course of action is to just move to a smaller W.
+For Id=930u, Wn=60u; Ls=115p, Lg=17.3n-Ls, Ld=50n:- IIP3=-13.89dBm. Other specs met.
+There are some rumors of having a -12dBm IIP3 at around 1.5mA, which I will verify.
+It's the damndest thing! 1890uA is giving -7.0dBm somehow (It continuously decreased from 930u to 1890u)! I will change my f0 and Rin and see. Like why did my 1st analysis tell me that the min. IIP3 came at around 900uA? Did I hit a local minima or something; or did the trends change when I changed my f0 and Rin?
+You're joking; the IIP3 became -13.9dBm when I set my f0 and Rin. It is indeed a mirage. I will still look around this point though.
+Yea, it is around -14dBm only from 1.2mA to 2.2mA when f0 and Rin are set for 1.89mA.
+For Id=1600u, Wn=60u; Ls=70p, Lg=17.1n-Ls, Ld=50n:- IIP3=-13.3dBm. Other specs met.
+For Id=1500u, Wn=60u; Ls=73p, Lg=17.1n-Ls, Ld=50n:- IIP3=-13.2dBm. Other specs met.
+For Id=1400u, Wn=60u; Ls=80p, Lg=17.1n-Ls, Ld=50n:- IIP3=-13.0dBm. Other specs met.
+
+27.2.26
+For Id=1300u, Wn=60u; Ls=86p, Lg=17.2n-Ls, Ld=50n:- IIP3=-12.9dBm. Other specs met.
+For Id=1200u, Wn=60u; Ls=92p, Lg=17.2n-Ls, Ld=50n:- IIP3=-13.0dBm. Other specs met.
+For Id=1100u, Wn=60u; Ls=100p, Lg=17.2n-Ls, Ld=50n:- IIP3=-13.2dBm. Other specs met.
+Moving to a lower wn and hoping IIP3 resolves itself. Procedure? Plot from 1G to 7G and repeat everything. Plan is to go to 40, but that might be too low, so will probably do 50.
+For Wn=50u, Id=200u, Ls=129p, Lg=22.4n-Ls, Ld=50n:- IIP3=-22.51dBm, A=25.22-24.7dB, NF=1.3dB
+For Wn=50u, Id=400u, Ls=146p, Lg=21.3n-Ls, Ld=50n:- IIP3=-19.62dBm, A=29.48-28.9dB, NF=1dB
+For Wn=50u, Id=800u, Ls=95p, Lg=20.7n-Ls, Ld=50n:- IIP3=-15.93dBm
+For Wn=50u, Id=1000u, Ls=79p, Lg=20.5n-Ls, Ld=50n:- IIP3=-15.07dBm
+For Wn=50u, Id=1200u, Ls=65p, Lg=20.5n-Ls, Ld=50n:- IIP3=-14.96dBm
+For Wn=50u, Id=1400u, Ls=55p, Lg=20.5n-Ls, Ld=50n:- IIP3=-15.12dBm
+For Wn=50u, Id=1600u, Ls=46p, Lg=20.4n-Ls, Ld=50n:- IIP3=-15.45dBm
+Bro, these sims have started taking too much time. Also my fricking IIP3 seems to be increasing for a lower wn what?! I mean I was just saying that a lower wn will help based on the fact that this assignment exists. But maybe I actually have to go to a bigger wn then?
+Do I try with 40u or 100u now?
+For Wn=100u, Id=600u, Ls=300p, Lg=11.1n-Ls, Ld=50n:- IIP3=-16.01dBm, A=26.84-26.32dB, NF=0.7dB
+For Wn=100u, Id=1000u, Ls=215p, Lg=10.7n-Ls, Ld=50n:- IIP3=-15.72dBm
+For Wn=100u, Id=1600u, Ls=146p, Lg=10.5n-Ls, Ld=50n:- IIP3=-12.70dBm
+For Wn=100u, Id=1800u, Ls=133p, Lg=10.5n-Ls, Ld=50n:- IIP3=-11.44dBm
+For Wn=100u, Id=2000u, Ls=122p, Lg=10.4n-Ls, Ld=50n:- IIP3=-9.86dBm (holy shit), NF=0.52dB, A=33.6 to 33.1dB
+For Wn=100u, Id=2400u, Ls=102p, Lg=10.3n-Ls, Ld=50n:- IIP3=-7.30dBm
+For Wn=100u, Id=2800u, Ls=88p, Lg=10.2n-Ls, Ld=50n:- IIP3=-10.10dBm
+For Wn=100u, Id=3200u, Ls=78p, Lg=10.1n-Ls, Ld=50n:- IIP3=-11.34dBm
+Asserion:- For a higher Wn, I can find an I smaller than what I have to pass the IIP3. But that will simply give me more gain and NF than I already have (much more than limit).
+For Ld=21n at the 2000uA, IIP3 became like-7dB. It seemed like a peak; lower Ld or higher Ld didn't give good IIP3. But also Rin wasn't exactly 50, so need to fix that and see. There was also another peak in the 111n to 121n range of about -8.4dB. But all of these were without exactly matching Rin.
+Suhas told us to reduce inductance and current values. I actually have like 0 mood right now for this. I'll just do tomorrow probably.
+For i=1400uA, wn=100u; IIP3 had a maxima at around Ld=20n. Decreasing Ld worsens flatness of A, Rin and S11. Possible that the maxima existed because it was only Rin matched at Ld=20n. Nvm, IIP3 became worse for Ld=15n when I matched Rin.
+Id=1400uA, wn=100u, Ls=143p, Lg=10.5n-Ls, Ld=20n:- Rin=51.6-50.0, S11=-23.4--24.3dB, NF=0.557-0.547dB, A=34.95-34.25dB, IIP3=-9.43dB. Rb=1M, Cb=100u
+I have waaayyy too much NF and A; I am using waaayyy too much wn and Id. If I reduce wn and Id, NF and A will reduce (till I barely meet spec), but I don't know if I can find a good IIP3 point there. I will obviously try to high-roll for a lower wn value, like 40u or something, because Id is way too high currently; but I do realize that a higher wn only will help me meet my IIP3 spec for a lower Id (and lower Lg?). Also Ld should be looked into I feel, because it is just way too large at the moment I feel; and it is having magical effects on IIP3 (which were obviously not covered in class).
+
+28.2.26
+So, I have to reduce Rb and Cb. I have to move the caps (load) from inside my LNA to outside. I have to do hand calculations. I have to find the simulated values for the R parallel with the Ls. I am sure as **** that my IIP3 curve is wrong (but can't do anything about that now); the non-linearities just don't show up like they do for the others. Hopefully changing shit doesn't affect my performance. Thankfully compulsory hand-calculations are only for Ls and their Rs. And it would not harm me to look for a better operating point. Also what the **** all testbenches have they used? I am just putting 1 VCVS and packing, even Rishi Nanda approved my testbench in a WhatsApp message, so I can argue there also. Oye, I also have to plug in all values to my components directly later. ****ing hell, I have to write my general procedure also.
+Indq didn't show its simulated value in DC operating point, so GGs.
+Decreasing Rb to 100k decreased my IIP3 by a bit (did increase my Rin though); Decreasing Cb to 10u didn't do shit. 1u also seems chilling. 0.1u=100n also chilling.
+Rb 50k also fine. 25k also chilling it seems like, but NF became slightly worse. Ok, I think we'll be chilling at like 10k. Will fix Rin and confirm.
+So putting the caps between the LNA outputs and the VCVS inputs came and $$$$d everything I thought I knew. So I am just putting it between the LNA output and GND, because that is what BS did in his video. Changing it from inside to outside did not do much when it is GNDed outside.
+Next goals for tonight - decrease my Ld to the brim, without degrading my Gain flatness and S11 too much. Ah yea 15n is cutting it too close for flatness, but it should pass. Will try for a matched Rin and confirm. My god, my IIP3 is just barely meeting spec; will make Ld 16n and see.
+Finalish values:- Rb=10k, Cb=100n, wn=100u, Id=1.4m, Ls=94p, Lg=10.35n-Ls, Ld=16n:- Rin=51.55-49.04Ohms, S11=-24.59--23.53dB, NF=0.95-0.97dB, A=36.7-35.92dB, IIP3=-9.6dBm. All MOSFETs in region 2. But, current in main MOSFETs is like 1.5, not 1.4 as in the bias MOSFET.
+For tomorrow: I recommend writing down the hand calculations for un and Cox neatly. Then I recommend writing the general procedure to follow (basically all things that you can finalize without finalizing an operating point). If you want to find a better operating point by searching wn=40u and 120u, you can I guess. But make it quick; if you are still doing that at 15:30, then we have a problem. Fill these values in the report for 90% of the marks then optimize if you have a finalized report's copy. If deadline actually gets extended, then can do optimization there also, but after finalizing AIC assignment with Jaival. That's it I guess (Suhas Anna has to reply about the simulated resq values and DC power without bias asked in the template).
+I might be an idiot; the caps I saw in the testbench are probably for coupling, not the load caps. I'll move them back now.
+Also seems like hand calculations are needed for max gain, NF are needed and will have to simulate from like 2G to 5G. Also I should try increasing my IIP3 power range for plots, but at the end, because it might crash something.
+Nothing crashed when I moved the caps inside; also maybe ask someone (Jaival/Atram) how to mark those lines in the plots to find points.
+Also wait, is it a problem that my max gain is not near my 3.5GHz range? Ehh lite, I am sleeping for now.
+
+1.3.26
+Ok, I am slighty panicking now, I have 2 points of low S11 in my 1G to 5G. Will fix somehow. And my gain is ****ing peaking at the other point. Oh no. It is mu Ld's fault. It has to be close to 1n. I can't believe I ****ed up this bad, but it should be fine if I just have to meet specs. My gain is ****ed, I can't even hope my IIP3 is good.
+Seems like this wn is not good enough for gain, I will increase.
+Ok, for some reason, I am not able to go over 12dB here. I might go wn=80u.
+Ok, at 80u, I was still not getting gain, but increasing Ld from 1n to 2n helped with gain.
+wn=80u, Id=8m, Ls=142p, Lg=13n, Ld=1.5n meets all except IIP3, which is -19.2dBm
+
+Starting over:-
+For wn=100u, Id=5m:- Ls=80p, Ld=10n, Lg gave wierd waveforms for S11 except for values 30n and above, but they had very low freq. peaks. Wierd being going both up and dwon/going down at 2 peak etc. Lg=10n and Ld=1n seems ****ing perfect. After matching Rin, Gain and IIP3 were not enough. Gain is not helped by increasing current, so I will vary Ld a bit. Like increasing Ld does increase gain, but almost always brings in an inadvertant 2nd peak later.
+And i have decided to hide this 2nd peak beyond 5GHz. Just need to make sure -3dB is visible. Now, I basically only have to correct IIP3 again. All Ids around 5m seem to be showing -20dBm only, will sweep wn and see.
+wn=50u gives -19.63 for no change in anything else except Lg.
+I have way too much gain flatness though, how do I sac that for IIP3?
+Why the **** is gm decreasing for a higher current?????!!!!
+Assuming **** all models in cadence, seems like IIP3 is lowering for higher Id, but for wn=50u, gain goes below 20db. Will go to a higher Wn and see, but for this wn, will try for lower Ids also.
+Seems like for lower Ids, gm increases with Id. Was I operating in moderate inveraion before?
+Will 100% confirm that IIP3 reduces for 10mA.
+wn=50u, Id=10m, Ls=162p, Lg=20.6n, Ld=1.4n:- IIP3=-15.94dBm. Probably can win at 60um.
+wn=60u, Id=10m, Ls=148p, Lg=17.2n, Ld=1.4n:- IIP3=-17.94dBm. Gain passes.
+wn=60u, Id=12m, Ls=162p, Lg=17.2n, Ld=1.4n:- IIP3=-10.84dB; gain just barely passes.
+wn=60u, Id=13m, Ls=245p, Lg=17.2n, Ld=1.4n:- IIP3=-19.3dB; gain not pass.
+wn=50u, Id=12m, Ls=250p, Lg=21.0n, Ld=1.4n:- IIP3=-18.20dB; gain below -20db.
+I am heartbroken and have no idea what is going on (why did Ls have that much of a rise, when it should decrease) and where did my IIP3 go?
+At least I can go to lunch knowing that the other points are still re-creatable. Unless Ls and Lg have some huge pull on IIP3, I can't explain what is happening.
+I think I know; gm first increases with Id and then starts decreasing. This, I think is because gm1 flattens and then gm3 decides the decrease in gm with increasing Id. If I find what happens to IIP3 at this point, I should be able to control it well. And also find what happens to this point for different wns.
+For wn=60u, this point is at 4mA. So beyond 8mA, IIP3 continuously decreases. But, after 12.2mA, some ****ery happens and you need a lot more Ls than *sqrt(a).
+What the **** is happening? Ok, I'll 1st give values and explain later.
+wn=60u, Id=12.2m, Ls=163p, Lg=17.5n, Ld=1.4n:- Everything meets, IIP3=-9.56dBm.
+So around this point, I tried increasing Ls. It was constant for a while and after a point, Rin ****ing decreased.
+Before doing anything else, I will plug in these values in the schematic and confirm its working. Then, I will make the report. Then, I will play around with more values.
+Also, looking at the way my Rin and IIP3 vary with Id (gm) tells me that I am on some precarious point on the gm3 curve and that it would do me good to get a better point; but after submitting.
+Also this a multiplier with 10mA is very good to help realize patterns.
+Bloody hell, I panicked when I wasn't able to plot IIP3 using main form. I just had to enter -40 in that 1 field.
+
+4.3.26:-
+So I realized that the speck is not on my Zin; it is only on my S11. So I can operate in the weird region between the negative and positive peak. Deadline extended by the way.
+Also some guy changed prf to -46 and got non-linearity, I should try that. I should also try changing that license text number to 5631 from 5630 to get rid of the seg fault when I swept.
+First though, I will make a copy of the LNA to jaival_test_bench.
+****ing hell, even though all nodes' voltages and currents drawn were the same, the specs were coming different (Zin itself was like 150Ohms, forget about the other sepcs). Seems like I have to work on it in the main one only. Have no ****ing idea what is different between the 2 schematics and testbenches.
+Thankfully, at is the same in the actual path's simulations.
+Nvm, I forgot to put the Rb values in. They were default 1k.
+Oh no, oh no, the seg fault wasn't due to sweeping; it ran, but spectre $$$$d me with 27 warnings for hb analysis. Main form also gave random stuff in the graph.
+Hmm, so my 3rd harmonic is not linear ever? I am ****ed. This is definitely wrong. I shouldn't get cold feet here. 1 day should be enough.
+I have a sense of how IIP3 works now. I also need to see why not including the 5th harmonic in hb analysis gave 2 errors, but still let me plot that shit.
+Damn, there is a hide option in the graph tool. Also where you extrapolate from basically doesn't matter as long as you extrapolate during the linear part. Now, I just have to bring it down from -10.53dBm for wn=60u, Ib=5m, Lg=17.5n, Ld=1.4n. All other specs pass I think.
+Also the warnings have reduced. Probably was going over some limits for IIP3.
+Ok, so I remember that somewhere, I wrote that the zero point of gm is somewhere around 5mA and it still is, because Zin (gm) was increasing with Id till 4mA, constant till 6mA and then decreased with increase in Ib.
+Ok, it is literally impossible to see using the multiple IIP3 plot if there are many graphs, so I will do individually.
+Cha loss, adding to IDE doesn't give me IIP3 value.
+Looks like I have my final ans:- wn=60u, Ib=6m, Ls=120p, Lg=17.5n, Ld=1.4n. Just try it in the proper directory and see if it works. Also I am getting 12 warning now, seems very dependent on the amount of Ib I have. Ayyo, bulk-drain/source junction current has exceeded 'imelt' and 'imax' ah. And 117 warnings suppressed <skull_emoji>.
+Oh wait this gives -9.2dBm with -50dBm extrapolation point if swept from -100 to 0. If swept from -80 to 0, more non-linearities come and actually make you need to sweep from -60dB to get good IIP3. Make sure to use a high sweep size when doing the final thing.
+Looks like I better find an operating point with low Ib, especially now that I can do IIP3 without blindly getting answers.
+No better luck below 5mA, so will change Ld to get sexy gain and then decrease both wn and Id to do closer to the specs.
+So the seg fault came back when I swept Ld. Like it was taking 1.5MHz as setp for ac and sp, even though I gave only 200 steps. And now, it is stalling at some inductor value (slowly slowly running) without giving seg fault. Yea, so when I removed hb analysis, the sims started running fast. Maybe I just have to like run IIP3 when I have finalized all values. May run into seg fault when sweeping.
+Coming to having the gains match at the same frequency, S11 gets destroyed (flat or has 2 peaks) when I match them. But will still experiment and see.
+Damn, sweeping 2 different variables is nice.
+So the centre frequency for Rin depends entirely on Ld. Higher Ld also messes with S11 more (higher +ve peak). Higher Ls make S11 slightly better I guess.
+So Ld=9n gives the part between the +ve and -ve peak almost at 3.5GHz for 50Ohms. I will try playing with Ls for this Ld. May also have to vary Lg and see its effects.
+Hmm, so I said that the +ve peak decreases in magnitude with increase in Ls right; it only happens till like Ls=315p to 335p. Then it saturates.
+Ok, I am assuming that it is not possible to meet the S11 specs unless there is some magical effect of Lg.
+Ah wait, there is scope to fix it by decreasing Id. Very interesting, increasing Lg also helps fix S11.
+
+5.3.26
+Seems like Ib isn't doing much actually; maybe I was deluded before. So Lg definitely makes it peak (-ve) properly, but it also shifts the centre frequency. Maybe a mix of Lg and Ld works?
+Have concluded that this is a waste of time. Maybe I can go under 1mA for having a freak-pass in my specs. But other than that, I strongly recommned going to other (assuming lower) wns to find a lower Id for which the specs pass.
+For 3mA, IIP3 doesn't pass. IIP3 gets better for 2mA, but I think that's a mirage.Ok, so I got IIp3 to pass at 1.5mA but when f0 was not exactly matched. But then when I matched it, it climbed back under -10. But gain wasn't matched anyway, so lite.
+Seems like I am getting better IIP3 at 6mA for wn=50u. Will find what happens around this.
+So for 50um, the 0 point of no change of gm with Id seems to come slightly before.
+wn=50u:- (increasing Ls can slightly help with IIP3)
+Id=1m, matched - IIP3=-13.2dBm, gain fails
+Id=2m, matched - IIP3=-13.7dBm
+Id=3m, matched - IIP3=-13.6dBm
+Id=4m, matched - IIP3=-12.6dBm
+Id=5m, matched - IIP3=-10.9dBm
+Id=6m, matched - IIP3=-8.7dBm
+Id=7m, matched - IIP3=-5.9dBm
+Id=8m, matched - IIP3=-1.8dBm
+Id=9m, matched - IIP3=2.26dBm
+Id=10m, matched - IIP3=1.48dBm
+wn=40u:- (increasing Ls can slightly help with IIP3)
+Id=5m, matched - IIP3=-9.9dBm
+Id=6m, matched - IIP3=-3.7dBm
+wn=30u:-
+Id=2m, matched - IIP3=-18dBm
+Id=3m, matched - IIP3=-16dBm
+Id=4.3m, matched - IIP3=-9.33dBm
+Might be worth it to not go below wn=30u, because then Lg increases that much.
+Will also check for higher wns in case magic happens.
+Rb=100k, Cb=10u, wn=30u, Ib=4.3m, Ls=89p, Lg=34.3n, Ld=1.4n:- IIP3=-9.77dBm; other specs met. Will try in the main one and take screenshots.
+Extrapolation point not fixed - -60dBm or -50dBm
+wn=30u:-
+Id=5m, matched - IIP3=-5.58dBm
+Id=6m, matched - IIP3=-4.9dBm. But all other specs are on very very thin ice.
+wn=70u:-
+Id=5m, IIP3=-10.1dBm
+Id=6m, IIP3=-9.2dBm
+Id=7m, IIP3=-8.0dBm
+Id=8m, IIP3=-6.7dBm
+Id=9m, IIP3=-5.2dBm
+wn=60u:-
+in=1m, matched - gain doesn't pass
+in=2m, matched - IIP3=-12.12dBm
+in=3m, matched - IIP3=-12.24dBm
+in=4m, matched - IIP3=-11.6dBm
+in=5m, matched - IIP3=-10.6dBm
+in=6m, matched - IIP3=-9.34dBm
+in=7m, matched - IIP3=-7.74dBm
+in=8m, matched - IIP3=-7.82dBm
+in=9m, matched - IIP3=-2.82dBm
+in=10m, matched - IIP3=-1.11dBm
+in=11m, matched - IIP3=4.68dBm
+wn=50u:-
+Id=4m - IIP3=-12.3dBm.
+Id=5m - IIP3=-10.2dBm.
+Id=6m - IIP3=-8.3dBm. 
+wn=40u:-
+Id=5m - IIp3=-9.72dBm 
+Id=6m - IIp3=-5.6dBm (different from before. This only seems correct, able to re-create)
+Id=7m - IIp3=-0.85dBm 
+Id=8m - IIp3=-1.21dBm 
+Id=9m - IIp3=-4.99dBm 
+Id=10m - gain doesn't pass
+wn=30u:-
+Id=4m - IIP3=-11.6dBm
+Id=5m - IIP3=-5.58dBm
+Id=6m - IIP3=-5.0dBm, gain iffy
+Id=7m - nothing passes
+
+23.3.26
+Looking from the future, I feel like the only real **** up was that I wasn't computing (simulating) the IIP3 properly before, so all my previous checkpoints were nulled. I also found out pretty late, because of which I wasn't able to venture into high Ws and see what happened.
+Also Suhas Anna told me that I could have used multipliers (fingers) to decrease my bias current, while still having the same Id in the main MOSFETs because using a high bias current is just a simple waste of power.
