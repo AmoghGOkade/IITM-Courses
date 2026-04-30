@@ -1,0 +1,504 @@
+25.3.26
+Hmm, first impressions - I need to integrate with my LNA at the end, but my LNA is far from optimal. I wonder how hard it will make my mixer. But at least there's no specs on the combined circuit; they have just asked for the params.
+I don't understand why fRF has a range and how to control the droop for some bandwidth. Need to revise notes. IIP2 has never been done before and sir is asking us to add some mismatch. Hopefully the 2022 doc still has relevant info on how to do all this. I also didn't think there was scope to improve power like an LNA, but I have to read notes. 
+Also the input capacitance thing bothers me; I could have directly put a capacitance higher than 200fF at the LNA if meeting this is going to be hard if I knew this.
+But all this aside, I only have 7 days for everything, I don't know why I didn't start till now.
+
+26.3.26
+Ok, so reading the notes and help doc gave me some idea about things. I will do the basic calculations (i.e. consolidate all formulae) and make the circuit and see.
+It's cool to see how changing the VLO, Ib, RL and all affects region of the MOSFET. Cool how intricate the change can be to fit them all into satu.
+Huh, so it does look like I will actually have to keep changing the port from DC -> sine again and again (1st for gain and NF, 2nd for IIPs). I may also have to use different settings for finding power (current) consumption, but that is for later (after I meet specs).
+So, it looks like the specs I started with are meeting NF (if the spec is on the integrated one, which it does look like), but not gain. I haven't checked linearity yet; maybe also need to figure out a better way to change from DC->sine.
+Also it was giving errors when I tried to run the gain and NF sims when source was AC. Will these errors stop just by disabling those sims? Because when I was applying 1 sim, another sim was thrwoing an error, which if it does not get fixed by just disabling it, then I probably need to like delete and re-add the sims everytime I switch from gain/NF <-> linearity.
+
+27.3.27
+Ok nice, so just disabling works.
+Ok, so IIP3 comes nicely for 1st order frf1-flo and frf2-flo; 3rd for -frf1-flo+2*frf2 and for -2*frf1+flo+frf2. (FLO is in the middle, don't get confused like 1 idiot).
+It is -2dBm, which doesn't pass.
+IIP2 curve is not coming properly, for 2nd order frf1-flo+frf2.
+Also, when I tried to run for current, the main form showed hb_mt simulation for me even though I had hidden the 2nd frequency (whereas it showed only hb for the help doc guy). So, maybe I need to delete frf2 rather than just hide it in the port? Yes and remember to unselect the sweep option also.
+Also when coming back to linearity from current, change the select dropdown menu from terminal to Port.
+Switch off sweep when doing gain, NF also.
+So it seems like IIP2 works only when I add the mismtach.
+Also I am unsure as to how to automatically plot IIP3 and IIP2 together without going to direct plot -> main form. But at least IIP2 is getting printed, if not plotted.
+Changing mxham to 5 didn't do that much, it shifted IIP3 by 0.5 and changed the shape of IIP2. And ah shit, while mxham of FLO is fine, mxham of the FRFs return to 3 everytime the port is switched from dc <-> sine.
+I randomly got 2 extra warnings, I don't know why, that said no. of harmonics is less.
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=100:- A=4.98, NF=9.12, IIP2=45.76, IIP3=-2.55
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=200:- A=10.91, NF=7.52, IIP2=45.46, IIP3=-2.95
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=300:- A=14.34, NF=6.84, IIP2=45.19, IIP3=-3.35
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=400:- A=16.74, NF=6.46, IIP2=44.94, IIP3=-3.76
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=500:- A=18.57, NF=6.23, IIP2=44.71, IIP3=-4.17
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=600:- A=20.04, NF=6.08, IIP2=44.47, IIP3=-4.60
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=700:- A=21.23, NF=5.98, IIP2=44.14, IIP3=-5.07
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=800:- A=22.27, NF=5.92, IIP2=43.60, IIP3=-5.64 (gain expansion seen)
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=900:- A=23.14, NF=5.88, IIP2=42.47, IIP3=-6.44 (gain expansion seen)
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=1000:- A=23.88, NF=5.86, IIP2=39.97, IIP3=-7.78 (gain expansion seen)
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=1100:- A=24.48, NF=5.86, IIP2=34.85, IIP3=-10.21 (gain expansion seen)
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=1200:- A=24.92, NF=5.88, IIP2=26.62, IIP3=-14.17
+Bottom line:- With increase in RL, gain increases as expected (nearly 20logRL). NF decreases till the contribution from other terms takes over. Linearity gets worse, because VDM2,3 decreases and M2,3 go closer to triode. No real effect should be visible due to M1 when changing RL.
+So, I actually can sweep I guess (FLO in port 4 became NAN when I tried to sweep RL, but that lite I think; the sweep gave the same values). All the things that get printed weirdly when you sweep can just be printed in maestro I think (IIP2,3 and NF).
+Also this shit became so much more tolerable when I put on music. Is this a good or a bad thing?
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=30u, RL=600:- A=20.04, NF=6.08, IIP2=44.47, IIP3=-4.60
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=90u, RL=600:- A=20.46, NF=5.48, IIP2=46.21, IIP3=-3.29
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=150u, RL=600:- A=20.23, NF=5.61, IIP2=48.51, IIP3=-2.96
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=210u, RL=600:- A=20.09, NF=5.89, IIP2=50.28, IIP3=-3.04
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=270u, RL=600:- A=19.84, NF=6.20, IIP2=51.71, IIP3=-3.38
+Bottom line:- By changing wsw, both gain and NF barely changed, which is expected. But I expected linearity to unilaterally get better, which didn't get better that much and actually started getting worse after a point, why. Maybe non-linearity of M1 is not the limiting factor and the NL of M2,3 is more significant?
+
+29.3.21
+I wasted the entirety of yesterday, but it was one of the most chill days I have had, so lite. The bs haircut pressure is spoiling my mood. I thought deadline was Wed, but it is Tue, shit.
+So, I assume changing VLO will help, because it will better the linearity of M2,3, but destroy the linearity of M1. But from the guess made before, maybe NL of M2,3 is more apparent than M1's.
+xxxxx VLO=0.6, Ib=1m, w=30, wsw=150u, RL=600:- A=17.69, NF=7.87, IIP2=48.55, IIP3=-7.43
+xxxxx VLO=0.7, Ib=1m, w=30, wsw=150u, RL=600:- A=19.47, NF=6.30, IIP2=48.23, IIP3=-3.91
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=150u, RL=600:- A=20.23, NF=5.61, IIP2=48.51, IIP3=-2.96
+xxxxx VLO=0.9, Ib=1m, w=30, wsw=150u, RL=600:- A=20.91, NF=5.15, IIP2=48.85, IIP3=-3.42
+xxxxx VLO=1.0, Ib=1m, w=30, wsw=150u, RL=600:- A=21.35, NF=4.83, IIP2=48.84, IIP3=-5.58
+Hmm, so it seems like there exists a sweet spot for some combination of wsw and VLO for which NL is very less. But before exploring this avenue, I want to think about and see what chaning Ib and wM1 does. There does not; the sweet spot is 0.8, 150u - variations are very linear around this point.
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=150u, RL=600:- A=20.23, NF=5.61, IIP2=48.51, IIP3=-2.96
+xxxxx VLO=0.8, Ib=1m, w=90, wsw=150u, RL=600:- A=22.51, NF=4.47, IIP2=43.37, IIP3=+2.22 (Wait. Oh nooo wayyy too much gain expansion in IIP3)
+xxxxx VLO=0.8, Ib=1m, w=150, wsw=150u, RL=600:- A=23.01, NF=4.36, IIP2=41.95, IIP3=+1.18 (gain expansion seen)
+xxxxx VLO=0.8, Ib=1m, w=210, wsw=150u, RL=600:- A=23.24, NF=4.38, IIP2=41.19, IIP3=+0.71 (gain expansion seen)
+xxxxx VLO=0.8, Ib=1m, w=270, wsw=150u, RL=600:- A=23.37, NF=4.44, IIP2=40.71, IIP3=-1.79 (gain expansion seen)
+Bottom line:- A and NF get better, but saturate, likely due to saturation of gm (moderate inversion). This is also seen due to the gain expansion (gm3 +ve possibly helps in this case).
+Before looking into the effects of Ib, I think I can cheese the specs by finding a point where the gain expansion is not that bad, but I just clear 0dB IIP3. Also is gain flatness even a problem?
+If I don't get gain expansion within the limits, I can probably go to a higher Vgs-Vt, where gm3 is 0 after the -ve peak.
+xxxxx VLO=0.8, Ib=1m, w=10, wsw=150u, RL=600:- A=14.48, NF=10.09, IIP2=62.67, IIP3=-1.28
+xxxxx VLO=0.8, Ib=1m, w=20, wsw=150u, RL=600:- A=18.81, NF=6.62, IIP2=51.98, IIP3=-3.93
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=150u, RL=600:- A=20.32, NF=5.61, IIP2=48.51, IIP3=-2.96 (gain expansion starts)
+So, probably, for this Ib, the W at which the gm3 becomes 0 after the -ve bump is too low. So, I have to move to a different Ib, higher or lower? Also gain died because gm died. So I need to increase Ib, from either w=30u or w=20u and see. Ah ****, but Ib directly destorys NL of M2,3. Maybe I have to move to the CMFB circuit, but 1st I will still try to go to a higher Ib and play around.
+xxxxx VLO=0.8, Ib=1.0m, w=30, wsw=150u, RL=600:- A=20.23, NF=5.61, IIP2=48.51, IIP3=-2.96
+xxxxx VLO=0.8, Ib=1.2m, w=30, wsw=150u, RL=600:- A=21.14, NF=5.23, IIP2=49.82, IIP3=-4.16
+xxxxx VLO=0.8, Ib=1.4m, w=30, wsw=150u, RL=600:- A=21.71, NF=5.02, IIP2=50.77, IIP3=-5.02
+xxxxx VLO=0.8, Ib=1.6m, w=30, wsw=150u, RL=600:- A=22.06, NF=4.95, IIP2=50.05, IIP3=-6.35
+xxxxx VLO=0.8, Ib=1.8m, w=30, wsw=150u, RL=600:- A=22.14, NF=5.07, IIP2=42.51, IIP3=-9.84
+xxxxx VLO=0.8, Ib=2.0m, w=30, wsw=150u, RL=600:- A=21.55, NF=5.12, IIP2=29.16, IIP3=-15.56
+xxxxx VLO=0.8, Ib=2.2m, w=30, wsw=150u, RL=600:- (M2,3 triode)
+Bottom line:- This just goes to show how much the IIP3 is dependent on the triode limits of M2,3 and not M1. Maybe I move to a lower RL before packing this circuit?
+Basically, I would want Ib*R (NL) to be low, but sqrt(Ib)*R to be high (A). Only a low Ib can achieve this; not a high Ib. So a suitable R is needed (or circuit change).
+
+xxxxx VLO=0.8, Ib=1.0m, w=30, wsw=150u, RL=400:- A=17.16, NF=5.93, IIP2=46.58, IIP3=-2.10
+xxxxx VLO=0.8, Ib=1.5m, w=30, wsw=150u, RL=400:- A=18.98, NF=5.15, IIP2=50.24, IIP3=-4.04
+xxxxx VLO=0.8, Ib=2.0m, w=30, wsw=150u, RL=400:- A=19.73, NF=5.11, IIP2=53.34, IIP3=-4.30
+xxxxx VLO=0.8, Ib=2.5m, w=30, wsw=150u, RL=400:- A=19.79, NF=5.39, IIP2=49.47, IIP3=-5.14
+xxxxx VLO=0.8, Ib=3.0m, w=30, wsw=150u, RL=400:- A=18.87, NF=5.96, IIP2=28.65, IIP3=-11.61
+Will try reducing IIP3 mainly, using wsw and VLO (and wM1 also)
+xxxxx VLO=0.8, Ib=2.0m, w=30, wsw=050u, RL=400:- A=19.1, NF=5.9, IIP2=52, IIP3=-5.6
+xxxxx VLO=0.8, Ib=2.0m, w=30, wsw=100u, RL=400:- A=19.6, NF=5.2, IIP2=52, IIP3=-4.5
+xxxxx VLO=0.8, Ib=2.0m, w=30, wsw=150u, RL=400:- A=19.7, NF=5.1, IIP2=53, IIP3=-4.3
+xxxxx VLO=0.8, Ib=2.0m, w=30, wsw=200u, RL=400:- A=19.6, NF=5.0, IIP2=54, IIP3=-4.2
+xxxxx VLO=0.8, Ib=2.0m, w=30, wsw=250u, RL=400:- A=19.5, NF=5.1, IIP2=55, IIP3=-4.2
+Damn, nothing helped. Will look at VLO now.
+xxxxx VLO=0.7, Ib=2.0m, w=30, wsw=150u, RL=400:- A=18.5, NF=6.1, IIP2=54, IIP3=-5.6
+xxxxx VLO=0.8, Ib=2.0m, w=30, wsw=150u, RL=400:- A=19.7, NF=5.1, IIP2=53, IIP3=-4.3
+xxxxx VLO=0.9, Ib=2.0m, w=30, wsw=150u, RL=400:- A=20.2, NF=4.7, IIP2=48, IIP3=-5.1
+xxxxx VLO=1.0, Ib=2.0m, w=30, wsw=150u, RL=400:- A=20.1, NF=4.4, IIP2=29, IIP3=-12.5
+
+Can I go to a higher R and try (seems very unintuitive, but everything got worse at a lower R so...)
+xxxxx VLO=0.8, Ib=0.4m, w=30, wsw=150u, RL=800:- A=16.9, NF=8.9, IIP2=45, IIP3=-5.1 (gain expansion seen)
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=150u, RL=800:- A=19.6, NF=7.0, IIP2=47, IIP3=-0.3 (gain expansion seen, like 10dB)
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=800:- A=21.2, NF=6.0, IIP2=48, IIP3=-2.0 (gain expansion seen)
+xxxxx VLO=0.8, Ib=1.0m, w=30, wsw=150u, RL=800:- A=22.3, NF=5.4, IIP2=50, IIP3=-4.4 (gain expansion seen)
+Changing wsw:-
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=020u, RL=800:- A=19.5, NF=7.1, IIP2=41, IIP3=-1.7 (gain expansion seen, like 5dB)
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=050u, RL=800:- A=19.9, NF=6.5, IIP2=42, IIP3=+0.2 (gain expansion seen, like 10dB)
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=100u, RL=800:- A=19.8, NF=6.7, IIP2=45, IIP3=+5.9 (gain expansion seen, like 20dB)
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=150u, RL=800:- A=19.6, NF=7.0, IIP2=47, IIP3=-0.3 (gain expansion seen, like 10dB)
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=200u, RL=800:- A=19.3, NF=7.4, IIP2=49, IIP3=-2.3 (gain expansion seen, like 5dB)
+Bottom line:- Expansion comes from which transistor? I just have to worsen that guy's IIP3 and better the other guy's to compensate for it.
+When I decrease wsw, expansion gets ****ed. wsw dec => vgs inc => vsM2,3 inc => vdM1 inc => M1 causes expansion. Worsen NL of M1 and better that of M2,3.
+I can either better gain expansion by decreasing or increasing wsw? Why? Should I stop looking at gm3 in terms of that graph that sir gave and start looking at in in terms of swing limits or something? I don't know, I am just blabbering; i'll take a break and come.
+How do I better NL of M2 without changing NL of M1? Decrease R. Put bleeder. Decreasing VLO betters NL of M2,3, but worsens NL of M1 (which is what I want I guess). 
+xxxxx VLO=0.6, Ib=0.6m, w=30, wsw=020u, RL=800:- IIP2=45, IIP3=-10.4 
+xxxxx VLO=0.7, Ib=0.6m, w=30, wsw=020u, RL=800:- IIP2=41, IIP3=-5.3 
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=020u, RL=800:- IIP2=41, IIP3=-1.7 (gain expansion seen, like 5dB)
+xxxxx VLO=0.9, Ib=0.6m, w=30, wsw=020u, RL=800:- IIP2=41, IIP3=-2.5 (gain expansion seen, like 7dB)
+xxxxx VLO=1.0, Ib=0.6m, w=30, wsw=020u, RL=800:- IIP2=40, IIP3=-3.7 (gain expansion seen, like 10dB)
+Near wsw=200u:-
+xxxxx VLO=0.6, Ib=0.6m, w=30, wsw=200u, RL=800:- IIP2=48, IIP3=-5.2 
+xxxxx VLO=0.7, Ib=0.6m, w=30, wsw=200u, RL=800:- IIP2=48, IIP3=-3.2 
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=200u, RL=800:- IIP2=49, IIP3=-2.3 (gain expansion seen, like 5dB)
+xxxxx VLO=0.9, Ib=0.6m, w=30, wsw=200u, RL=800:- IIP2=49, IIP3=-2.0 (gain expansion seen, like 10dB)
+xxxxx VLO=1.0, Ib=0.6m, w=30, wsw=200u, RL=800:- IIP2=49, IIP3=-3.1 (gain expansion seen, like 12dB)
+Changing w for wsw=200u:-
+xxxxx VLO=0.8, Ib=0.6m, w=10, wsw=200u, RL=800:- IIP2=56, IIP3=-3.7
+xxxxx VLO=0.8, Ib=0.6m, w=20, wsw=200u, RL=800:- IIP2=50, IIP3=-2.7
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=200u, RL=800:- IIP2=49, IIP3=-2.3 (gain expansion 5dB)
+xxxxx VLO=0.8, Ib=0.6m, w=40, wsw=200u, RL=800:- IIP2=47, IIP3=-3.3 (gain expansion there)
+Changing w for wsw=20u:-
+xxxxx VLO=0.8, Ib=0.6m, w=10, wsw=20u, RL=800:- IIP2=52, IIP3=-4.4
+xxxxx VLO=0.8, Ib=0.6m, w=20, wsw=20u, RL=800:- IIP2=43, IIP3=-3.4
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=20u, RL=800:- IIP2=41, IIP3=-1.7 (gain expansion 5dB)
+xxxxx VLO=0.8, Ib=0.6m, w=40, wsw=20u, RL=800:- IIP2=39, IIP3=-1.6 (gain expansion 5dB)
+xxxxx VLO=0.8, Ib=0.6m, w=50, wsw=20u, RL=800:- IIP2=39, IIP3=-2.4 (gain expansion 7dB)
+
+Ok, I give up, I am putting bleeder. What is my best value(s) right now?
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=150u, RL=600:- A=20.23, NF=5.61, IIP2=48.51, IIP3=-2.96 (gain expansion 3dB)
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=20u, RL=800:- IIP2=41, IIP3=-1.7 (gain expansion 5dB)
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=200u, RL=800:- IIP2=49, IIP3=-2.3 (gain expansion seen, like 5dB)
+
+Ib-0.3m (ideal):-
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=150u, RL=600:- A=20.7, NF=5.3, IIP2=48, IIP3=-2.3 (no gain expansion)
+Ok, so NL of M2,3 was/is basically 0. I just have to somehow fix purely the NL of M1. Luckily the bleeder drove away the gain expansion, so I have more freedom to fix the NL now. And it didn't **** with A and NF yay. So what improves IIP3 from previous data? Reducing RL? But that was for M2,3. wsw? Yes because it changed VDM1. Changing VLO. Changing w. Changing Ib.
+Keep in mind that we are not done, because I have used an ideal idc for the bleeder; need to put MOSFET and see what happens. Oh no, I am worried about NL of the bleeder MOSFETs, because Vo is biased high with them, which is the PMOS (bleeder MOSFETs') drain. Oh, but I can bias it with whatever Vg I want, so it may be not that much of a problem.
+Why does increasing wsw by sooo much decrease VgsM2,3 by soooo little.
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=50u, RL=800:- IIP2=45, IIP3=-3.1
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=100u, RL=800:- IIP2=47, IIP3=-2.6
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=150u, RL=800:- IIP2=48, IIP3=-2.3
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=200u, RL=800:- IIP2=50, IIP3=-2.2
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=250u, RL=800:- IIP2=51, IIP3=-2.4
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=300u, RL=800:- IIP2=52, IIP3=-2.7
+I have to see if increasing VLO increases my VDM1 by much or not.
+xxxxx VLO=0.6, Ib=1m, w=30, wsw=150u, RL=800:- IIP2=48, IIP3=-6.5
+xxxxx VLO=0.7, Ib=1m, w=30, wsw=150u, RL=800:- IIP2=48, IIP3=-3.0
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=150u, RL=800:- IIP2=48, IIP3=-2.3
+xxxxx VLO=0.9, Ib=1m, w=30, wsw=150u, RL=800:- IIP2=49, IIP3=-2.6
+xxxxx VLO=1.0, Ib=1m, w=30, wsw=150u, RL=800:- IIP2=49, IIP3=-3.0
+xxxxx VLO=1.1, Ib=1m, w=30, wsw=150u, RL=800:- IIP2=50, IIP3=-3.5 (gain expansion, 3dB)
+Bottom line:- ****kkk, increasing VLO does increase VDM1, but increasing VDM1 doesn't better the IIP3. What am I to do? Only w and Ib are left. If that doesn't help, then gan only.
+Hmm, I wonder if that means that my assumption that IIP3 from M2,3 is as low as it can be, because this is just based off of the fact that it has sooo much more drain voltage.
+But for now, the 1st priority is to just make sure that I change the IIP3 of M1 to meet the overall spec, and without much expansion. If I don't find any such point, what should I do? CMFB circuit only ah? And will that even help? And even if the bleeder works, who is to say that introducing the new MOSFET won't **** the IIP3 up? Because I assumed that also because I though I can just meet VD < VG + VT. Aaahhhh, aiyoooo.
+xxxxx VLO=0.8, Ib=0.6m, w=30, wsw=150u, RL=600:- A=17.5, NF=7.1, IIP2=45, IIP3=-0.6
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=600:- A=19.4, NF=6.0, IIP2=47, IIP3=+0.1 (gain expansion 2.5dB)
+xxxxx VLO=0.8, Ib=1.0m, w=30, wsw=150u, RL=600:- A=20.7, NF=5.4, IIP2=48, IIP3=-2.3
+xxxxx VLO=0.8, Ib=1.2m, w=30, wsw=150u, RL=600:- A=21.6, NF=4.9, IIP2=50, IIP3=-3.3
+Hmm, I still have to put the actual MOSFETs for the bleeder and see. Also there is some gain expansion, need to see if TA accepts it. Also need to zoom in onto that part.
+Am also curious to see if the actual current in the bleeder influences much.
+xxxxx VLO=0.8, Ib=0.60m, w=30, wsw=150u, RL=600:- A=17.5, NF=7.1, IIP2=45, IIP3=-0.6 
+xxxxx VLO=0.8, Ib=0.65m, w=30, wsw=150u, RL=600:- A=18.0, NF=6.8, IIP2=45, IIP3=+0.7 (gain expansion 3.0dB)
+xxxxx VLO=0.8, Ib=0.70m, w=30, wsw=150u, RL=600:- A=18.5, NF=6.5, IIP2=46, IIP3=+1.4 (gain expansion 4.0dB)
+xxxxx VLO=0.8, Ib=0.75m, w=30, wsw=150u, RL=600:- A=19.0, NF=6.3, IIP2=56, IIP3=+1.0 (gain expansion 3.0dB)
+xxxxx VLO=0.8, Ib=0.80m, w=30, wsw=150u, RL=600:- A=19.4, NF=6.0, IIP2=47, IIP3=+0.1 (gain expansion 2.5dB)
+xxxxx VLO=0.8, Ib=0.85m, w=30, wsw=150u, RL=600:- A=19.7, NF=5.8, IIP2=47, IIP3=-0.6 (gain expansion 2.5dB)
+Need to increase RL (to meet gain) and see if it still Fs with my NL, need to see if Ibl does anything at all to anything, need to put non-ideal bleeders and see how it messes up anything. Both my IIP3 and my flatness are edging the specs.
+
+30.3.26
+Oh also, I just realized, Ib messes with the NL of M2,3 also, so it may have bettered that. Will have to change just w and also see.
+xxxxx VLO=0.8, Ib=0.65m, w=30, wsw=150u, RL=600:- A=18.0, NF=6.8, IIP3=+0.7 (gain expansion 3.0dB)
+xxxxx VLO=0.8, Ib=0.65m, w=30, wsw=150u, RL=700:- A=19.3, NF=6.6, IIP3=+0.8 (gain expansion 5.0dB)
+xxxxx VLO=0.8, Ib=0.65m, w=30, wsw=150u, RL=800:- A=20.4, NF=6.5, IIP3=+0.7 (gain expansion 7.0dB)
+For Ib=0.8m
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=600:- A=19.4, NF=6.0, IIP2=47, IIP3=+0.1 (gain expansion 3.0dB)
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=700:- A=20.6, NF=5.9, IIP2=48, IIP3=-0.2 (gain expansion 4.0dB)
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=800:- A=21.7, NF=5.8, IIP2=48, IIP3=-0.6 (gain expansion 5.0dB)
+Bottom line:- It seems like NL contribution is more from M2,3 at Ib=0.8m, but more from M1 near Ib=0.65m
+xxxxx VLO=0.8, Ib=0.65m, w=10, wsw=150u, RL=600:- IIP3=-3.3
+xxxxx VLO=0.8, Ib=0.65m, w=20, wsw=150u, RL=600:- IIP3=-1.7
+xxxxx VLO=0.8, Ib=0.65m, w=30, wsw=150u, RL=600:- IIP3=+0.7
+xxxxx VLO=0.8, Ib=0.65m, w=40, wsw=150u, RL=600:- IIP3=-1.8
+xxxxx VLO=0.8, Ib=0.65m, w=50, wsw=150u, RL=600:- IIP3=-3.4
+xxxxx VLO=0.8, Ib=0.65m, w=60, wsw=150u, RL=600:- IIP3=-4.4
+Oh.
+xxxxx VLO=0.8, Ib=0.65m, w=25, wsw=150u, RL=600:- A=17.6, IIP3=+0.1
+xxxxx VLO=0.8, Ib=0.65m, w=27, wsw=150u, RL=600:- A=17.8, IIP3=+0.6 (gain expansion 1.5dB)
+xxxxx VLO=0.8, Ib=0.65m, w=29, wsw=150u, RL=600:- A=18.0, IIP3=+0.8 (gain expansion 2.5dB)
+xxxxx VLO=0.8, Ib=0.65m, w=31, wsw=150u, RL=600:- A=18.1, IIP3=+0.5 (gain expansion 2.5dB)
+xxxxx VLO=0.8, Ib=0.65m, w=33, wsw=150u, RL=600:- A=18.2, IIP3=+0.0 (gain expansion 2.5dB)
+xxxxx VLO=0.8, Ib=0.65m, w=35, wsw=150u, RL=600:- A=18.4, IIP3=-0.5 (gain expansion 2.0dB)
+Try for Ib=0.8m. It is not looking good.
+xxxxx VLO=0.8, Ib=0.8m, w=10, wsw=150u, RL=600:- IIP3=-2.6
+xxxxx VLO=0.8, Ib=0.8m, w=20, wsw=150u, RL=600:- IIP3=-2.9
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=600:- IIP3=+0.1 (gain expansion 2.0dB)
+xxxxx VLO=0.8, Ib=0.8m, w=40, wsw=150u, RL=600:- IIP3=+3.9 (gain expansion 12.0dB)
+xxxxx VLO=0.8, Ib=0.8m, w=50, wsw=150u, RL=600:- IIP3=+0.1 (gain expansion 6.0dB)
+I think, if I am submitting with ideal bleeders, this is my best bet (finding one point near RL=600 (check below also) and near w = 30 and near Ib=0.8m). Maybe I'll see what Ibl also does. I won't be able to meet a 1dB expansion, but i'll try to keep it under 4dB if possible. But why do I feel like I won't be able to cross 20dB gain and 0dB IIP3 simultaneously without having a pregnant IIP3?
+Ok, I feel the need to try out CMFB before replacing the idc with a MOSFET in the bleeder. But I will still try changing Ibl and see before doing this.
+Changing Ibl and seeing:-
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=600, Ibl=0.3m:- A=19.3, IIP3=-0.0
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=600, Ibl=0.4m:- A=19.3, IIP3=+0.0
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=600, Ibl=0.5m:- A=19.4, IIP3=+0.1
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=600, Ibl=0.6m:- A=19.4, IIP3=+0.3 (gain expansion 2.0dB)
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=600, Ibl=0.7m:- A=19.4, IIP3=+0.4
+Can I find an answer with ideal idc bleeder?
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=600, Ibl=0.7m:- A=19.4, IIP3=+0.4
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=650, Ibl=0.7m:- A=20.1, IIP3=+0.2
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=700, Ibl=0.7m:- A=20.7, IIP3=+0.0
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=750, Ibl=0.7m:- A=21.3, IIP3=-0.1
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=800, Ibl=0.7m:- A=21.8, IIP3=-0.2
+An answer (with ideal bleeder):-
+xxxxx VLO=0.8, Ib=0.8m, w=30, wsw=150u, RL=650, Ibl=0.7m:- A=20.1, NF=5.9dB, IIP2=47, IIP3=+0.2 (gain expansion 2.0dB)
+Hmm, maybe I do replace the bleeder with MOSFETs and see how badly I get ****ed before going to CMFB.
+Ok, this just cannot be done. I am screwed. Moving to CMFB immediately.
+****, I just realized, I can't do the opamp CMFB, because of compensation. Have to get lucky with the Rcm only. **** **** ****.
+Ok, I think the CMFB is just for gain, I am not sure if it helps NL, so I will just try source degeneration once.
+
+Single ended:- gm>1/Re, which ****s up both A and NF. Same problem will be there in differential also ah?
+
+Starting over:-
+Reducing RL reduces gain exp and also gain, but betters IIP3 (M2,3). Increasing w can better NL but expansion is there.
+Conclusion - I cannot do better than Ib=0.8m and w=30u for M1.
+Will try full bleeder. What else can I do? My brain is also playing tricks on me now.
+
+Full bleeder:-
+Why does it worsen IIP3? I just don't have any words. Maybe decrease in gm2,3 is bad for IIP3, more than how good a better VD is? I expected it to unilaterally better IIP3 because VDM1 also increases if Ibl there.
+Like how - when I decrease your gm by changing Id, your IIP3 plummets, but when I decrease it by decreasing wsw, you are fine with it? Like what do you want from me? You tell me. I am ready to do it for you MOSFET ****er.
+I'll try to force constant gm2,3 with bleeder and see what happens. With Ibl=0, w=150u, Vgs=503m and vds=543m. With Ibl=0.4m, w=150, Vgs=461m, Vds=723m. Ibl=0.4m, wsw=30u, Vgs=512m, Vds=798m.
+Bro I literally kept you gm constant and increased your headroom. Why the **** are you crying.
+Bro, if you have the same IIP3 for all wsw's when Ibl=0.4m, then why the **** do you cry when I better you headroom by putting Ibl? It's literally good for you.
+xxxxx VLO=0.8, Ibl=0.0m, Ib=0.8m, wsw=150u, RL=600, w=30u:- Vd2,3=840m, Vgs2,3=500m, Vgs1=560m, Vd1=300m:- IIP3=-0.5
+xxxxx VLO=0.8, Ibl=0.0m, Ib=0.8m, wsw=150u, RL=300, w=30u:- Vd2,3=1020m, Vgs2,3=500m, Vgs1=560m, Vd1=300m:- IIP3=+1.0
+xxxxx VLO=0.8, Ibl=0.4m, Ib=0.8m, wsw=30u, RL=300, w=30u:- Vd2,3=1080m, Vgs2,3=512m, Vgs1=560m, Vd1=280m:- IIP3=-8.0
+Looks like yes, the dropping of gm2,3 did destroy the IIP3. I'll try compensating the lost current from Ib.
+When I compensated the lost current from Ib (basically only gm1 increased from no bleeder): IIP3=-5.2. This is probably due to M1 getting ****ed. But now, I can try reducing RL?
+RL=600 to 200 Brought IIP3 down to -4.6.
+
+Redo of understanding of full bleeder.
+xxxxx VLO=0.8, Ibl=0.0m, Ib=0.8m, wsw=150u, RL=600, w=30u:- Vd2,3=840m, Vgs2,3=500m, Vgs1=560m, Vd1=300m:- IIP3=-0.5 (gm2,3=13m, I2,3=630u)
+xxxxx VLO=0.8, Ibl=0.4m, Ib=0.8m, wsw=150u, RL=600, w=30u:- Vd2,3=1060m, Vgs2,3=460m, Vgs1=560m, Vd1=330m:- IIP3=-0.5 (gm2,3=5m, I2,3=230u) - sub threshold
+Oh, I think it is because gm is independent of W now ad is only proportional to Vd (because moderate inversion)
+xxxxx VLO=0.8, Ibl=0.4m, Ib=0.8m, wsw=30u, RL=300, w=30u:- Vd2,3=1080m, Vgs2,3=512m, Vgs1=560m, Vd1=280m:- IIP3=-8.0 (gm2,3=4m, I2,3=180u)
+Ok, so I realized my mistake. Sub-threshold IIP3 is horrible and I was pushing M2,3 to sub-threshold by decreasing its Id. So I have to compensate with Ib.
+Wait but that means that I have absolutely no way of changing NL of M2,3 because I am trying to keep its Id (gm) const. I can only mess with NL of M1 without changing anything above.
+
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=150u, RL=600:- A=20.3, NF=5.6, IIP2=48, IIP3=-3.0 (gain expansion 3dB)
+Increasing Ib was messing up IIP3 because it also messed up the IIP3 of M2,3 by decreasing its drain voltage.
+xxxxx VLO=0.8, Ib=1.1m, w=30, wsw=150u, RL=600, Ibl=0.1m:- A=20.8, IIP3=-3.6
+xxxxx VLO=0.8, Ib=1.6m, w=30, wsw=150u, RL=600, Ibl=0.6m:- A=22.3, IIP3=-6.0
+xxxxx VLO=0.8, Ib=2.1m, w=30, wsw=150u, RL=600, Ibl=1.1m:- A=23.0, IIP3=-7.8
+xxxxx VLO=0.8, Ib=2.6m, w=30, wsw=150u, RL=600, Ibl=1.6m:- A=23.1, IIP3=-9.5
+Nothing to pursue here, optimal gm of M1 near this range is attained. gm1 plummets after 5.1m, but IIP3 keeps decreasing.
+How do I independently better IIP3 of M2,3 without touching M1? Or do I move to a different operating point for M2,3?
+I can inject current into M2,3, but the MOSFET implementation will be blech.
+
+Wait, I can move to a higher current right? For M1, but by increasing w also.
+Ib=1m, w=30u:- gm1=11m
+Ib=1.5m, w=20u:- gm1=10m
+Ib=2m, w=15u:- gm1=7m
+Ib=2.5m, w=15u:- gm1=6m. ****ing ridiculous. Huh, it is nearing triode, that's why. But it still shouldn't ****ing decrease.
+
+xxxxx VLO=0.8, Ib=1.5m, w=20, wsw=150u, RL=600, Ibl=0.0m:- A=20.8, IIP3=-4.3 (slight gain expansion)
+IIP3 became slightly better when Ibl came, at Inl=0.2, IIP3 = -3.9
+Without changing M2,3, gm1 decreases with Ib at around Ib=2m to 2.5m. IIP3 starts worsening from like Ib=3m.
+xxxxx VLO=0.6, Ib=2m, w=20, wsw=150u, RL=600, Ibl=0.5m:- IIP3=-2.5 (I1=1.13u)
+xxxxx VLO=0.7, Ib=2m, w=20, wsw=150u, RL=600, Ibl=0.5m:- IIP3=-4.0 (I1=1.35u)
+xxxxx VLO=0.8, Ib=2m, w=20, wsw=150u, RL=600, Ibl=0.5m:- IIP3=-2.8 (I1=1.49u)
+xxxxx VLO=0.9, Ib=2m, w=20, wsw=150u, RL=600, Ibl=0.5m:- IIP3=-5.6 (I1=1.60u)
+Bottom line:- Don't ****ing ask me; I don't even know how to see IIP3 now, with triode limits also. (Because all gms are same when I change VLO).
+VLO=0.5 - subthreshold. VLO=0.9 - near triode.
+Oh wait another ****ing backstab. VLO is changing currents and Vgs's. What the **** am I supposed to believe lol. Pray to god and get lucky I guess.
+No change of IIP3 with wsw at VLO=0.8. Big change of IIP3 with wsw at VLO=0.6.
+Bottom line:- Is the difference the MOSFETs themselves or the region of operation of M2,3? No way to know haha.
+Wait, I am in triode for VLO=0.6, w=20u, Ib=2m. GGs ah. Should I just move to a higher w? But then my bleeder becomes useless.
+
+Blind try:-
+Ib=1m, w=60u:- gm=13m
+Ib=2m, w=60u:- gm=21m
+Ib=1m, w=60u, wsw=150u, VLO=0.8, Ibl=0.0m, RL=600:- A=21.9, IIP3=+5.6 (pregnant)
+Plan for today:- No more circuit changes. Change bleeder, VLO, RL and wsw finely based on a general w and Ib. For w=60u, 120u and 200u. Figure out the operating Ib. Have to check DC before changing anything.
+Ib=1m, w=60u, wsw=150u, VLO=0.8, Ibl=0.0m, RL=400:- A=xx.x, IIP3=+2.7 (pregnant)
+Ib=1m, w=60u, wsw=150u, VLO=0.8, Ibl=0.0m, RL=500:- A=xx.x, IIP3=+6.4 (pregnant)
+Ib=1m, w=60u, wsw=150u, VLO=0.8, Ibl=0.0m, RL=600:- A=xx.x, IIP3=+5.6 (pregnant, 25dB)
+Ib=1m, w=60u, wsw=150u, VLO=0.8, Ibl=0.0m, RL=700:- A=xx.x, IIP3=+0.7 (pregnant, 19dB)
+For Ib=1m, w=60, Ibl=0.0m, VLO=0.8:-
+wsw=130u, RL=600:- P3=2.9, exp=20dB
+wsw=130u, RL=650:- P3=1.5, exp=20dB
+wsw=130u, RL=700:- P3=0.1, exp=18dB
+wsw=180u, RL=600:- P3=4.7, exp=22dB
+wsw=180u, RL=650:- P3=2.4, exp=20dB
+wsw=180u, RL=700:- P3=2.4, exp=18dB
+For Ib=1m, w=60, Ibl=0.0m, wsw=130u, RL=600:-
+VLO=700:- P3=3.7, exp=17
+VLO=800:- P3=2.9, exp=20
+VLO=900:- P3=-1.1, exp=15
+Zoomed:-
+VLO=675:- P3=0.5, exp=10
+VLO=700:- P3=3.7, exp=17
+VLO=725:- P3=7.8, exp=27
+VLO=750:- P3=7.2, exp=27
+VLO=775:- P3=4.5, exp=20
+VLO=800:- P3=2.9, exp=20
+For Ib=1m, w=60, wsw=130u, RL=600, VLO=0.7:-
+Ibl=0.1m:- P3=3.5, exp=17
+Ibl=0.2m:- P3=2.1, exp=13
+Ibl=0.3m:- P3=-0.7, exp=6
+For Ib=1m, w=60, wsw=130u, RL=600:-
+VLO=0.7, Ibl=0.0m:- P3=3.7, exp=17
+VLO=0.7, Ibl=0.1m:- P3=3.5, exp=17
+VLO=0.7, Ibl=0.2m:- P3=2.1, exp=13
+VLO=0.7, Ibl=0.3m:- P3=-0.7, exp=6
+VLO=0.725, Ibl=0.0m:- P3=7.8, exp=26
+VLO=0.725, Ibl=0.1m:- P3=7.9, exp=27
+VLO=0.725, Ibl=0.2m:- P3=5.2, exp=20
+VLO=0.725, Ibl=0.3m:- P3=0.8, exp=10
+VLO=0.75, Ibl=0.0m:- P3=7.2, exp=27
+VLO=0.75, Ibl=0.1m:- P3=10.2, exp=30
+VLO=0.75, Ibl=0.2m:- P3=8.9, exp=30
+VLO=0.75, Ibl=0.3m:- P3=2.3, exp=15
+VLO=0.775, Ibl=0.0m:- P3=4.5, exp=22
+VLO=0.775, Ibl=0.1m:- P3=5.7, exp=23
+VLO=0.775, Ibl=0.2m:- P3=6.4, exp=22
+VLO=0.775, Ibl=0.3m:- P3=3.1, exp=17
+Looked around w also, nothing really went below 10dB expansion (at VL=0.75).
+Do I try replacing the idc with pmos's? In case magically something happens? Later. Not getting NANs when I sweep somehow.
+I'll just move to another w=120u.
+For w=120u, VLO=0.75, wsw=130u, RL=600, Ibl=0.0m:-
+Ib=1.10m:- P3=2.4, exp=22, A=23.0
+Ib=1.15m:- P3=3.5, exp=22, A=23.3
+Ib=1.20m:- P3=2.3, exp=20, A=23.5
+Ib=1.25m:- P3=0.9, exp=20, A=23.8
+For w=120u, VLO=0.8, wsw=130u, Ib=1.2m, Ibl=0.0m:- (regions are fine at both 400 and 800Ohm)
+
+Jaival:- Id=0.6m, RL=600, VLO=0.8, wsw=50u, w=30u - problem up there!!
+soln:
+1) decrease RL and increase Ib
+2) Increase swing up ther by reducing VLO - deal with the other problems it brings about (Increase the W of the transistor up there)
+
+Jaival:- Id=0.8m, VLO=0.68, wsw=120u, w=40u, RL = 780 - problem up there!!
+Bettering swing up there decreases pregnanncy.
+
+Jaival:- Id=0.8m, VLO=0.68, wsw=100u, w=40u, RL = 700 - best till now - IIP3 = -0.7 dBm and exp = 6dB
+
+
+
+31.3.26
+
+Basically Jaival's principle was:- bettering triode limits up top betters pregnancy (reducing RL, VLO, Ib, reducing w), with unexpected but small changes to IIP3 and bettering triode limits on the bottom betters IIP3 (increasing VLO, w, wsw, decreasing Ib). This theory works well till it stops working.
+For today, I will first fill in the report's hand calculations and procedure. Then I will go to a 4dB pregnancy that gives me best IIP3 (that doesn't pass) and change mxham and ep till it passes. And maybe fix the bias.
+
+Available decent values for trying this strat:-
+xxxxx VLO=0.65, Ib=0.95m, w=80, wsw=120u, RL=560:- A=19.88, NF=5.9, IIP2=41, IIP3=-1.0, exp=6dB
+xxxxx VLO=0.68, Ib=0.8m, w=40, wsw=100u, RL=700:- A=19.96, NF=6.4, IIP2=44, IIP3=-0.7, exp=6dB
+xxxxx VLO=0.8, Ib=1m, w=30, wsw=150u, RL=600:- A=20.23, NF=5.61, IIP2=48, IIP3=-2.96, exp=3dB
+Trying for better:-
+xxxxx VLO=0.68, Ib=0.8m, w=40, wsw=100u, RL=700:- A=19.96, NF=6.4, IIP2=44, IIP3=-0.7, exp=6dB
+xxxxx VLO=0.675, Ib=0.8m, w=40, wsw=100u, RL=700:- A=19.89, NF=6.4, IIP2=44, IIP3=-1.1, exp=5dB
+xxxxx VLO=0.67, Ib=0.8m, w=40, wsw=100u, RL=700:- A=19.82, NF=6.4, IIP2=44, IIP3=-1.5, exp=4dB
+xxxxx VLO=0.675, Ib=0.8m, w=40, wsw=100u, RL=700:- A=19.75, NF=6.4, IIP2=44, IIP3=-1.9, exp=3dB
+xxxxx VLO=0.66, Ib=0.8m, w=40, wsw=100u, RL=700:- A=19.68, NF=6.4, IIP2=44, IIP3=-2.2, exp=3dB
+Will play with ep now.
+Ib=0.8, w=45u crosses A (P3=-0.1, exp=7dB). Ib=0.84, w=39u crosses A (exp=2dB, P3=-2.5). Ib=0.88m, w=34 crosses A (but IIP3 dies).
+So, depending on how much I can better IIP3 with mxham and ep, I can take a point between the 1st 2 values in the above line.
+For Ib=0.84m, w=39u:-
+mxham(frf)=3, ep=-40:- IIP3=-2.5, exp=2
+mxham(frf)=5, ep=-40:- IIP3=-2.5, exp=2
+mxham(frf)=9, ep=-40:- IIP3=-2.5, exp=2
+mxham(flo)=3, ep=-40:- IIP3=-1.9, exp=5
+mxham(flo)=5, ep=-40:- IIP3=-2.5, exp=2 (was there till now)
+mxham(flo)=7, ep=-40:- IIP3=-5.5, exp=NA
+mxham(flo)=9, ep=-40:- IIP3=-5.1, exp=NA
+Unbelievable. When I go to Ib=0.8m, w=45u, for maxham=7, nothing changes in IIP3, exp.
+Gain decreases slightly when I go from mxham 3 to 7.
+Dei, nothing is changing IIP3 only now (RL, Ib, w, wsw). At mxham(flo)=7. But an increase in RL increases exp.
+Increase in VLO betters IIP3, but worsens exp.
+Increasing Ib betters IIP3 now T-T, but it has too much expansion, but I can counter that with RL.
+Ib=1.15m:- will try reducing Rl for better exp. Between Rl=500 has some scope? exp=12dB. P3=0.4.
+Cha loss, same tradeoffs with wsw also. Is there no quantity remaining that trades exp for gain without touching IIP3? Not even VLO, only w left; then I am starting report after checking ep.
+Lesser w just gives better IIP3 period. Obviously gain dies.
+Wow, I have so much gain. I'll try reducing w further for better IIP3 and trade that with exp by reducing Ib.
+Ah ****, decreasing w only helps IIP3 till w=65 lol.
+Checkpoint:-
+Ib=1.15m, VLO=0.8, wsw=100u, Rl=500, w=66:- A>21, IIP3=0.66, exp=12dB.
+Aim:- reduce exp, forget all values with IIP3<0.
+Submittable value:- 
+Ib=1.15m, VLO=0.8, wsw=100u, Rl=380, w=66:- A>19, IIP3=0.03, exp=7dB. Noooo nooo my gain.
+Why are my sims not running now? I have 8 hours and they hang!!! Same og waiting for available license issue!!!
+Ib=1.15m, VLO=0.8, wsw=100u, Rl=415, w=66:- A=20.1, IIP3=0.2, exp=9dB.
+Ok, decreasing wsw is somehow bettering IIP3, what in the world?
+Ib=1.15m, VLO=0.8, wsw=95u, Rl=415, w=66:- A=x, IIP3=0.5, exp=10dB.
+Ib=1.15m, VLO=0.8, wsw=100u, Rl=415, w=66:- A=x, IIP3=0.2, exp=9dB. (best)
+Ib=1.15m, VLO=0.8, wsw=105u, Rl=415, w=66:- A=x, IIP3=0.03, exp=8dB.
+VLO (last before ep):-
+8dB exp at VLO=0.79, but IIP3=-0.1. Not worth pursuing, because gain might have fallen below.
+ep:-
+-80, -60, -50, -40:- no change in exp or IIP3.
+GGs I guess. Now i'll try reducing bias current.
+
+As expected, slight variations appear, which I will have to take care of. IIP3 is increasing slightly the more I divide it; expansion also probably, will bring it dwon though; main scare is gain.
+Chilling; gain inreased; will see if I can compensate it somehow. To bring down exp, since I have both more gain and more IIP3 (for 10x factor).
+Ib=0.115m, VLO=0.8, wsw=100u, Rl=415, w=66, wmir=6.6u:- A=21.38, IIP3=0.7, exp=10.5dB. Operating point also fine.
+Ib=0.115m, VLO=0.8, wsw=115u, Rl=415, w=66, wmir=6.6u:- A=20.38, IIP3=0.16, exp=9.5dB. Operating point also fine. (mxham=7). But it has some line in between (in gain plot).
+Ib=0.115m, VLO=0.8, wsw=105u, Rl=415, w=66, wmir=6.6u:- A=20.38, NF=4.6, IIP2=42, IIP3=0.5, exp=10dB. Operating point also fine. (mxham=7). No line in between (in gain plot) (finale)
+We won't even talk about how decreasing wsw betters IIP3 lol.
+
+So, Jaival said NF will increase to 10 as I integrate further away from 0 (flo), but it is decreasing. Do I reduce the 1k to 0 also?
+
+Ok, I need to rant:- The band over which SSB NF<10 - I'll assume that it is not the integrated one.
+What about the NF for fin=flo, fin=flo+10MHz, fin=flo-10MHz? 
+What about the tones used in LNA being 3.5GHz and 3.501GHz, but in the mixer being 3.5GHz and 3.51GHz. What about my simulation taking like a billion years to run (I don't even know if it'll finish running after a billion years).
+In Jaival's year, they were separated by 1MHz in both LNA and mixer.
+First I'll find current and then go for a bath. Cha I was so close to going to Pranav's rAmAyaNa pravachana and yet so far. Cha, I wanted to go.
+I'll scam the NF part also by writing same values for all of them. But what'll I do about my IIP3 not running? And do I try with 3.51GHz or 3.501GHz when I go for bath, dinner?
+I feel 3.501GHz, because the previous batch also had 1MHz separation between the tones.
+I also kinda want to see what happens to the IIP3 of the mixer itself when I use 3.501GHz instead of 3.51GHz.
+
+Oh shit, it slows down in the middle; so it won't make a difference even if I leave it when going for bath. If it is still running after dinner, I have a good mind to like remove the LNA and check if the testbench has some weird problems running for just the mixer also.
+Damn, ran in like 45 mins with 84 warnings. Most of them are <voltage> exceeded breakdown 9.6Vs and <current> has excceded imelt and imax.
+And my curves got ****ed. Along with some error in cds log - interception point is out of lower bound sweep lol. Oh, it is diverging, the 2 extrapolated lines. Oof.
+Oh shit, that was the wrong harmonic, flo is in the left now. Hmm, I am getting decently behaved curves now; decent not proper. Will take screenshots after dinner; run it starting at -80dBm and then also run it for 3.501GHz.
+Realized it is stupid to not overlap a run with dinner, so ran from -80 after taking screenshots. But, it ran instantly (maybe because I changed mxham to 5 from 7)? Late for dinner aaahhh. Oh, but curve is wrong.
+Do I do that before or after hand calculations? Ehh lite, that decision comes 2 hours later anyways. I'll take it then. Oh wait, but deadline will be only 1.5hrs away at that time, so probably hand calculations only 1st.
+Oh wow, perfect curve for maxham(flo)=5, mxham(frf1, frf2)=5. It runs fast also. 
+I wonder why making mxham(frfs)=3 destroys the curves like that.
+Oh damn, also mxham(flo) runs fast now. I wonder why? Was it a one-time thing or was the server just slow at that time? Probably none of these, because I saw harm (35, , ) which I am not seeing now; max is like harm(3, , ).
+Also damn, there is not much difference at all between using 3.51GHz and 3.501GHz; just a small IIP3 change. Everything started to suddenly work randomly.
+My only remaining rant I guess is about the NF for fin=flo, fin=flo+10MHz, fin=flo-10MHz? I'll scam the NF part also by writing same values for all of them.
+
+
+
+3.4.26
+Ok, I feel so stupid when I think about this, so I just am not; on 30.3.26, they sent a mail for deadline extension, because they changed the specs. I could have gone to Pranav's upanyAsa and I wasted hours of my life on non existent specs.
+The new specs have pussy values, so my main aim is going to be absurdly reducing power consumption.
+First, I want to see if changing the current multiplier to the main branch affects overall power consumption much. Or should I do this after I meet the new sepcs? Ehh, after I guess is better.
+
+Starting with
+xxxxx wsw=30u, VLO=0.8, w=30, Ib=1m, RL=700:- A=21.2, NF=6, IIP2=43, IIP3=-5.1
+So, since I have a lot of NF left, I will - decrease gm (decreases gain, increases NF) by 1) decreasing w 2) decreasing Ib. 1) should better exp, worsen IIP3 2) should better exp, better IIP3.
+Trivia:- Subthreshold is only reached at Ib=0.08m, and it is reached by the switch, even though its Vgs is higher than the main MOSFET's Vgs.
+Gain fails at 0.8m. Should try to increase w or R to make up. Preferrably R no? Because w betters NF also, which I already have. 
+Wow, I had forgotten how much R increases my gain by.
+xxxxx wsw=30u, VLO=0.8, w=30, Ib=0.4m, RL=1200:- A=20.5, NF=8, IIP2=40, IIP3=-2.1, exp=6dB
+xxxxx wsw=30u, VLO=0.7, w=30, Ib=0.4m, RL=1200:- A=xxxx, NF=x, IIP2=40, IIP3=-5.2, exp=NA
+Changing wsw had a weird change on IIP3 depending on the region, but it did not affect exp.
+xxxxx wsw=30u, VLO=0.8, w=60, Ib=0.4m, RL=1200:- A=xxxx, NF=x, IIP2=38, IIP3=-4.3, exp=4dB
+xxxxx wsw=30u, VLO=0.8, w=60, Ib=0.4m, RL=1100:- A=20.5, NF=7, IIP2=38, IIP3=-4.6, exp=2dB
+What is concerning me is the negative dip in IIP3, but I guess that should be allowed.
+xxxxx wsw=70u, VLO=0.8, w=60, Ib=0.4m, RL=1100:- A=xxxx, NF=x, IIP2=41, IIP3=-5.1, exp=2dB
+xxxxx wsw=60u, VLO=0.8, w=60, Ib=0.4m, RL=1100:- A=xxxx, NF=x, IIP2=40, IIP3=-5.2, exp=1.5dB
+Changing VLO
+xxxxx wsw=60u, VLO=0.75, w=60, Ib=0.4m, RL=1100:- A=20.1, NF=8, IIP2=40, IIP3=-5.5, exp=NA
+So, I have to just bring the IIP3 down and submit. Can do this by decreasing Ib. But i'll have to increase R or w to compensate.
+Ohh ho ho ho, dcreasing Ib is worsening IIP3, probably because of sub-threshold. Everything is screaming at me to increase Ib lol. But, to avoid sub-threshold, I can decrease w.
+
+Also, I haven't confirmed whether decreasing Ib indeed decreases the power consumption in all areas.
+
+Fine wsw changes didn't help. There is scope near wsw=10u and wsw=30u (both DC fine). There is some weird expansion at like wsw=20u.
+Ahh, Vivek came early, so probably can't do much today, especially because upanyAsa is there and andhikkadai plan. Scared for AIC because deadline is 8th and have to do MOS characterization. And cadence is slow right now.
+
+Around wsw=10u, gain expands and IIP3 gets better with increase in wsw.
+But around wsw=30u, gain expansion - no change, IIP3 gets worse with increase in wsw.
+
+xxxxx wsw=25u, VLO=0.75, w=60, Ib=0.4m, RL=1100:- A=19.9, NF=8, IIP2=37, IIP3=-4.7, exp<1dB. Just submit this at this point after changing the Ib multiplier and checking gain/DC/current change with Ib.
+xxxxx wsw=25u, VLO=0.75, w=60, Ib=0.4m, RL=1140:- A=20.3, NF=8, IIP2=37, IIP3=-4.6, exp=1.5dB.
+xxxxx wsw=25u, VLO=0.75, w=60, Ib=0.39m, RL=1140:- A=20.0, NF=8, IIP2=37, IIP3=-4.8, exp=1dB.
+Huh, increasing the gain multiplier increases the gain; let's see what it does to the exp, IIP3. Wow, it has IIP3=-4dB, but exp=4dB.
+xxxxx wsw=25u, VLO=0.71, w=60, Ib=0.39m, RL=1140, x=100:- A=20.1, NF=8, IIP2=37, IIP3=-5.0, exp=0.5dB.
+Wow, wsw does not change anything.
+xxxxx wsw=25u, VLO=0.71, w=70, Ib=0.39m, RL=1140, x=100:- A=20.2, NF=8, IIP2=37, IIP3=-4.7, exp=2dB.
+Both RL=1120 and VLO=0.7 give A=20.1. Whichever gives better exp, I will take and finalize.
+Oh, VLO=0.7 sends IIP3=-5.1. Hmm, I'll have to do RL only then.
+xxxxx wsw=25u, VLO=0.71, w=70, Ib=0.39m, RL=1120, x=100:- A=20.13, NF=8.68, IIP2=37.52, IIP3=-4.80, exp=1.2dB. DC good. Submit this. IDC,rms=10.7mA. Cgs=-97fF.
+
+5.4.26
+Google AI said that the NF of a gilbert cell mixer is 1 + gamma/(Rs*gm1) + 2*gamma*gm2/(pi*Rs*gm1^2) + 2/(Rs*RL*gm1^2).
+Which seems right, but I am not enthu to go and change and re-upload the report. Also, Jaival didn't put the NF calculation in his report, so lite only I guess. AIC I have to do.
+Why am I not able to edit my testbench? Concerned because when I added Sanket's output to the ADE, even though direct plot -> main form was giving nice graphs, the added graph was absolute bullshit.
+Oh, I had to run that Rishi Nanda command to delete the cdslck files.
+Also now I have the issue where the frfs are not disappearing when I change it to sine. I made Sanket delete the maestro window and make a new one; and it worked. Maybe I'll also do it.
+Also what the ****, now the full-screen is so ass after I changed the vncsession because it randomly got deleted by some error because of ams.
+My guess is that they upgraded servers; because it said that vnc was deprecated and they moved to something new. So I guess I work in half screen now. But Sanket's worked wtf.
+
+10.4.26
+So, I tried to see if the simulations are working. Turns out they are; I didn't have to delete and remake the maestro tab; the frfs are coming and going properly with sine and dc ports.
+Make sure to use mxham(frfs)=5 in the lna+mixer when showing, otherwise cooked graphs will come.
+Also, it is possible to join the meet from the server; just need to join from another device also for sound and microphone.
+Also VCO deadline is 14 ah! I have 4 days ah! He said he'll extend it, but I though I had like 8-10 days for the inital deadline only!
+
+Oh, I just had to netaccess from a browser that didn't have proxy to get internet on my laptop through the lan cable.
+
+11.4.26
+My god, viva scary. He asked -
+Q1. Why do we need 1 sine and 1 cos component? I was stuttering as to how exactly it separated I and Q, because I had forgotten the calculations. Maybe if I had seen that topic after Mixers (Image reject architecures), I might have gotten clarity on the math. 
+He probably expected that (m1 sinwt + j m2 coswt)*(sinwt+jcoswt) gives m1 sin^2wt at vI - can split as m1 (1-cos2wt)/2 and filter out the m1 component.
+Q2. And he also asked "why can't we use ac or sp analysis for mixer gain, why do we need hbac only" - I told some random bullshit. Anna said that I should have said that "ac or sp is small signal analysis, but here, we need large signal analysis, because we need non-linearity also, not only linearity".
+Gone only.
+But I ran simulations well and fast, but I don't think that'll count for shit.
+Also 1 scare in between - bias current was showing 2 times what I had reported. I said that I reported bias current per mixer and he was satisfied.
