@@ -1,0 +1,213 @@
+29.4.26:-
+So, again, the PA circuit is not given, but the test bench is. There seems to be a VCB of 1.2V going into the PA other than the VDD, which I am not sure what it is.
+Ok, nvm; in the schematic provided, there is only VDD, VSS, VBIAS, VIN and VOUT.
+Seems like I have to make the circuit on my own. Do I even try without a MN?
+I don't even want to use jaival_test_lib, because it is cluttered with the billion files from the vco.
+
+The cascode was added because the Cgd was too high and gave a feedback path.
+P=20mW => Va=2V. Haveee to use MN. Will use cascode also, because whenever MN is there, cascode also there.
+Using Rl,in = 12.5Ohms gives Va=1V.
+What would be my inf. indu's value?
+Ok, this inertia is crazy. At least make the circuit and abstract out all params, without filling in their values.
+Maybe I can check, in test_world, which MN gives better impedance matching.
+
+Ib=Va/Rin=1/12.5=80mA. gm*Rin=2 => wn such that gm=160mS. wn=53um (from square law calculations).
+What happened to the millimeter w talks?
+Vb2=VGS2+Vdsat1. Va<Vdd - Vdsat1 - Vdsat2.
+I am thinking I need a lesser R than 12.5, but that we'll see later.
+
+So in test_world_, high pass gave 1.08Ohms; low pass gave 1.44Ohms. But, the imaginary part was 0 only at 3.5G. At 3.45 and 3.55G, it was +-0.6Ohm for high-pass and +-0.8Ohm for low-pass.
+The one where I used indq instead of ind gave 0.
+Actually I think some lafda is happening when I put all ports; I will add then one by one for each simulation.
+Oh no, the port's resistance is not coming into play only; it was just taking the R from the indq.
+Also there is 'waiting for license' delay, so I am going to study AIC.
+
+2.5.26
+So, I have to do it as fast as possible, otherwise I am throroughly screwed.
+When I add only a resistance, the value of both Re and IM(Z11) change. But Im(Z11)=0 @3.5G only for 500Ohms, where Re(Z11)=0.95Ohms.
+It is not the R of the port. It is not the Cb. Not Pin. It actually seems to work better for higher R, but not lower.
+I am not sure, but I think I was making some mistake in the values.
+Because now, the low pass works very well for 50Ohms. Gives 13.57Ohms, with IM=0Ohms @3.5G.
+High pass - Re=13.05, Im=-0.9. If I put Rout=55.555 to account for indq, Re=12.46, Im=0.15.
+Go for low pass. Works with a port also. Bloody hell. Why did it fail before? I think I interchanged L1 and L2.
+
+I am an idiot. I don't know why I added a MOSFET bias circuit to generate the cascode's bias.
+No value for Linf. Maybe I text Suhas Anna.
+Ok, so from calculations, Ib=80mA, gm=160mS => Vdsat=1V, wn=60u. Vb2=2.5V. But since Vdsat=1V, it can't swing at all.
+So, since Vgs=3V for this, I obviously increase my wn. Say Vdsat=0.2V. What wn for 80mA? MOS_char!
+I/m=257.94u. m=310. Vb2=VGS2+Vdsat=1.1.
+But it doesn't work; both in triode. Basically need to increase my wn a lot more. I think I'll also need to decrease my Rin because it seems like my Va=1 will be too big, but I'll think about that later.
+Also it seems like my Vx is not biased at 1.2 hmm (it is 0V). Given my experience, it will probably set itself when I force saturation.
+
+Ok wow, this is a real problem. For Ib=0.2m, mn=200, they are in sub-threshold; and Vx=1V.
+For Ib=1m, mn=200, both are in satu, but Vx=0.4V.
+I thought it was a problem of the Linf being too small, but when I made it 1H (from 1u), Vx=85n.
+Fixed instantly when I removed indq and put ind. How the **** do they think they can get away with just never addressing this shit?
+But lite, I might have to use that elaborate matching network anyways I think (because the graphs in the help doc seem narrowband).
+
+As expected, AC gain increases with mn. But, it decreases with Ib somehow. Wasn't gain proportional to gm?
+Wow, 103 warnings on the hb simulation. All 'Newton stagnates' only. Pout,1dB=12.73dB. Need to increase somehow. Maybe by decreasing Vb2? Because I think bettering triode limits will better P1dB.
+
+3.5.26
+When I changed Vb2 to 1.05 (from 1.13), P1db,o=12.36 (from 12.73)
+For Vb2=1.5, P1db,o=15.1
+Vb2=2:- P1db,o=16.81.
+Swept Vb2 from 1 to 2.5. Trans was in triode at 1, cascode was in triode at 2.2. P1dB,o kept increasing and saturated when cascode went to triode.
+Complete opposite of what was taught in class. Keep the trans just above triode it seems. It needs to be well into satu.
+
+Decreasing Ib worsened P1dB. Does P1dB depend on cutoff limits more than triode limits?
+Till now, I was thinking I had to reduce Va for triode limits, but now I am thinking I need to increase it for cutoff limits. Rin=Va^2/2*P => Ib=Va/Rin=2*P/Va.
+But this is if I want to reduce power consumption. I can probably still increase the current and get away with it.
+It might still be interesting to see what happens at a lower Rin (Va) though. Will really show whether cutoff or triode limits rule.
+Not too much variation of P1dB with frf.
+
+Right now, I have 9 degree phase deviation.
+Bottom line - I have no ****ing idea what I am doing, so I just have to be a brain-dead guy who changes params randomly and sees what happens to the output.
+I am using an ideal inductor at my drain, because if I use an indq, **** all happens (not biased at 1.2V).
+Need to change my MN values and see. Also need to change my MN itself to a 3-component MN and see?
+I don't give a **** about power consumption.
+I haven't swept mn much. I haven't separated the mns of the trans and cascode.
+There is too little time for all this shit.
+
+Suhas Anna said that I can use ideal inductors for biasing. When was I going to be told this if I didn't ask wtf?
+Value of Cb doesn't change much. Neither does Linf, but using 1m instead of 1 reduces the number of warnings from 100+ to 22.
+Agenda - check what happens (to P1dB,o and AM-AM) with changing Ib, mn, MN (Rin) value, separating mn, mcas. In this order. But 1st look at PA_report_template for any more hints.
+
+From the PA_report_template (which is not rendering a table properly):- The guy didn't use a cascode. He used an ideal indu for biasing. The P1dB,o is 13dB, not 20. The AM-AM curve's angles are supposed to be around 90degree, not around the -180 degree I am getting.
+* Huge! Both hb sims (AM-AM and P1dB) can be run at the same time, irrespective of the .hb sim configuration. Oh wait, but I think the values (i/p P1dB and AM-AM) are slightly different. So when recording, run P1dB with 'names' and AM-AM with 'frequencies'.
+Ohh wait, if mxham=harms=10, then both give same values. Since I ran with mxham=7, it gave different values.
+
+xxxxx Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=300, frf=3.5G, mxham=7, harm=10
+(Ib, P1dB,i, P1dB,o) = (83m, 3.43, 12.9), (84m, 3.76, 13.001), (85m, 4.10, 13.07), (86m, 4.42, 13.11), (87m, 4.76, 13.16)
+(Ib, AM-AM) = (83m, 2.69), (84m, 3.31), (85m, 3.99), (86m, 4.72), (87m, 5.53)
+xxxxx Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=300, frf=3.5G, mxham=10, harm=10
+(Ib, P1dB,i, P1dB,o) = (83m, 3.59, 13.1), (84m, 3.94, 13.19), (85m, 4.25, 13.2), (86m, 4.57, 13.26), (87m, 4.91, 13.31)
+(Ib, AM-AM) = (83m, 3.18), (84m, 3.76), (85m, 4.43), (86m, x.xx), (87m, x.xx)
+
+mxham=harms=10 (always)
+xxxxx frf=3.45G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=300, Ib=80m:- AM-AM=1.19, P1dB,o=12.92, A=5.21
+xxxxx frf=3.50G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=300, Ib=80m:- AM-AM=1.39, P1dB,o=12.85, A=5.17
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=300, Ib=80m:- AM-AM=1.54, P1dB,o=12.77, A=5.12
+Can probably meet specs soon lol?
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=250, Ib=80m:- AM-AM=8.19, P1dB,o=12.2, A=2.55
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=300, Ib=80m:- AM-AM=1.54, P1dB,o=12.77, A=5.12
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=350, Ib=80m:- AM-AM=-1.78, P1dB,o=12.69, A=7.67 (on that expansion)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=400, Ib=80m:- AM-AM=-1.4, P1dB,o=13.2, A=9.98 (on that expansion)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=450, Ib=80m:- AM-AM=-0.91, P1dB,o=13.89, A=12.21 (on that expansion)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=500, Ib=80m:- AM-AM=-0.37, P1dB,o=14.41, A=14.41 (on that expansion)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=600, Ib=80m:- AM-AM=0.29, P1dB,o=14.98, A=18.69 (no expansion)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=800, Ib=80m:- AM-AM=0.54, P1dB,o=15.46, A=26.43 (no expansion)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1200, Ib=80m:- AM-AM=0.98, P1dB,o=15.98, A=38.36 (no expansion)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=2000, Ib=80m:- AM-AM=1.38, P1dB,o=16.64, A=52.26 (no expansion)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=4000, Ib=80m:- AM-AM=2.10, P1dB,o=17.18, A=67.05 (everything inverter - angles are near +ve 180 now, and gain increases with freq.)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=6000, Ib=80m:- AM-AM=2.12, P1dB,o=17.31, A=68.67 (everything inverter - angles are near +ve 180 now, and gain increases with freq.)
+Graph of AM-AM looks bad after this (not even close to sub-threshold still)
+
+Bottom line:- I think operating at sub-threshold (edge) is best for AM-AM and P1dB.
+The high DC gain worries me, but I think I should be fine if I operate at a low Ib (I do acknowledge that decreasing Ib somehow increases A, but my w can be lower).
+
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=4000, Ib=20m:- AM-AM=-2.34, P1dB,o=20.79, A=25.40 (huge bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=2800, Ib=20m:- AM-AM=-ve, P1dB,o=19.44, A=24.86 (huge bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=2400, Ib=20m:- AM-AM=0.18, P1dB,o=18.31, A=24.33 (small bump) (gain minima seen)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=2000, Ib=20m:- AM-AM=1.26, P1dB,o=16.01, A=23.51 (small bump) (P1dB after bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1600, Ib=20m:- AM-AM=4.21, P1dB,o=12.93, A=22.30 (small bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1200, Ib=20m:- AM-AM=7.18, P1dB,o=12.85, A=20.49 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1000, Ib=20m:- AM-AM=7.14, P1dB,o=13.33, A=19.24 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=800, Ib=20m:- AM-AM=4.56, P1dB,o=12.75, A=16.63 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=600, Ib=20m:- AM-AM=1.85, P1dB,o=10.44, A=15.44 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=400, Ib=20m:- AM-AM=0.70, P1dB,o=7.09, A=12.25 (no bump)
+
+Try to better AM-AM, while keeping P1db,o in check:-
+Vary Vb2 -
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=0.8, mn=800, Ib=20m:- AM-AM=2.60, P1dB,o=9.89, A=13.48 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=0.9, mn=800, Ib=20m:- AM-AM=3.64, P1dB,o=11.87, A=14.83 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1, mn=800, Ib=20m:- AM-AM=4.28, P1dB,o=12.63, A=16.07 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=800, Ib=20m:- AM-AM=4.56, P1dB,o=12.75, A=16.63 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.2, mn=800, Ib=20m:- AM-AM=4.61, P1dB,o=12.6, A=18.45 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.3, mn=800, Ib=20m:- AM-AM=4.64, P1dB,o=12.26, A=19.60 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.4, mn=800, Ib=20m:- AM-AM=4.62, P1dB,o=11.76, A=20.74 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.5, mn=800, Ib=20m:- AM-AM=4.49, P1dB,o=11.06, A=21.86 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.6, mn=800, Ib=20m:- AM-AM=3.86, P1dB,o=10.09, A=22.95 (no bump)
+
+Try to better P1dB,o, while keeping AM-AM in check:-
+Vary Vb2 -
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1, mn=600, Ib=20m:- AM-AM=1.61, P1dB,o=10.06, A=14.23 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=600, Ib=20m:- AM-AM=1.85, P1dB,o=10.44, A=15.44 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.2, mn=600, Ib=20m:- AM-AM=1.96, P1dB,o=10.53, A=16.08 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.3, mn=600, Ib=20m:- AM-AM=2.14, P1dB,o=10.61, A=16.97 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.4, mn=600, Ib=20m:- AM-AM=2.37, P1dB,o=10.59, A=17.83 (no bump)
+
+Nothing that has AM-AM<3 is crossing P1dB=13 and vice versa (just with Vb2; can maybe try with mcas)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=4000, Ib=40m:- AM-AM=2.03, P1dB,o=17.81, A=42.68 (small bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=3600, Ib=40m:- AM-AM=1.92, P1dB,o=17.47, A=42.30 (small bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=3200, Ib=40m:- AM-AM=1.79, P1dB,o=17.01, A=41.65 (small bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=2800, Ib=40m:- AM-AM=1.64, P1dB,o=16.44, A=40.65 (small bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=2400, Ib=40m:- AM-AM=1.54, P1dB,o=15.68, A=39.22 (small bump) (here is where the minima is seen in the gain plot) (p1dB after bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=2000, Ib=40m:- AM-AM=1.67, P1dB,o=14.66, A=37.20 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1600, Ib=40m:- AM-AM=2.37, P1dB,o=13.71, A=34.38 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1200, Ib=40m:- AM-AM=2.95, P1dB,o=13.55, A=30.33 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1000, Ib=40m:- AM-AM=2.37, P1dB,o=13.37, A=27.62 (no bump) (passes specs)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=800, Ib=40m:- AM-AM=1.49, P1dB,o=12.62, A=24.19 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=600, Ib=40m:- AM-AM=1.00, P1dB,o=11.44, A=19.69 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=400, Ib=40m:- AM-AM=0.35, P1dB,o=10.13, A=13.49 (no bump)
+
+Ok, so I am an idiot. I just stopped at mn=1000 for 20mA. Should have gone higher. Can operate with a small bump, if Suhas Anna allows; otherwise can just operate just before the minima switches (won't be bump here).
+Should have used my brain instead of taking so many runs to figure it out.
+
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=2400, Ib=30m:- AM-AM=1.47, P1dB,o=16.02, A=32.45 (small bump) (here is where the minima is seen in the gain plot)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=2000, Ib=30m:- AM-AM=1.87, P1dB,o=14.46, A=31.05 (small bump) (p1dB after bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1800, Ib=30m:- AM-AM=2.25, P1dB,o=13.65, A=30.41 (no bump) (passes specs)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1600, Ib=30m:- AM-AM=3.10, P1dB,o=13.01, A=29.06 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1200, Ib=30m:- AM-AM=4.45, P1dB,o=12.99, A=26.14 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1000, Ib=30m:- AM-AM=3.73, P1dB,o=13.04, A=24.16 (no bump)
+
+Holey wow, changing the mmir to 1 did nothing.
+Ok, so Vanchinathan Anna said that as long as my peaking is within the spec (so logically, the topmost point - @P1dB should be less than 3degree I think).
+If Suhas Anna also says this only, I will find a point with a lower current with peaking. Otherwise I will just go ahead with the 30mA point. I am tired.
+Also it is AM-PM gaaaahhhhh.
+In the 20mA point, for P1dB,o=20, the change was -2.34 degree. So I can make this work at extremely low currents if it is allowed.
+I can also try 1) removing the cascode (because I think it just betters gain, by negating parasitics) 2) changing my MN values
+I am too tired to do 2), but I will do 1), because it may help with current by giving me more room with linearity.
+
+Without cascode:-
+yyyyy frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1000, Ib=30m:- AM-AM=0.32, P1dB,o=13.52, A=27.95 (small bump) (P1dB before bump)
+yyyyy frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=1600, Ib=30m:- AM-AM=x.xx, P1dB,o=xx.xx, A=xx.xx (huge bump)
+yyyyy frf=3.55G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, Vb2=1.13, mn=2600, Ib=30m:- AM-AM=0.33, P1dB,o=15.75, A=39.61 (small bump) (P1dB before bump)
+
+Can go to a lot lower current.
+I am able to get up onto the bump and still be under 3 degree deviation, but I don't know if that is allowed. Suhas Anna ahhh.
+I will try for the cascode values with half and twice the Rin.
+
+I will only write optimal/near optimal values now.
+xxxxx frf=3.55G, Cb=1n, Cmat=0.909p, Lmat=1.1368n, Vb2=1.13, mn=1800, Ib=30m:- AM-AM=2.49, P1dB,o=14.39, A=39.31 (no bump) (passes specs)
+xxxxx frf=3.55G, Cb=1n, Cmat=2.4p, Lmat=0.752n, Vb2=1.13, mn=1800, Ib=30m:- AM-AM=4.36, P1dB,o=11.90, A=21.91 (no bump)
+xxxxx frf=3.55G, Cb=1n, Cmat=0, Lmat=0, Vb2=1.13, mn=1800, Ib=30m:- AM-AM=1.3, P1dB,o=11.99, A=45.32 (no bump, but weird graph later)
+
+4.5.26
+Suhas Anna said that if the bump is beyond the P1dB, it is fine. I will try for no cascode, for low currents.
+yyyyy frf=3.5G, Cb=1n, Cmat=1.575p, Lmat=0.9845n, mn=2600, Ib=20m:- AM-AM=0.xx, P1dB,o=15.1, A=33 (2deg bump) (P1dB before bump)
+For lower mn, the bump is too big. For higher mn, the P1dB is on the bump.
+For 10mA, whenever the bump is not too high and P1dB is not on the bump, P1dB,o doesn't pass. Same with 15mA.
+Just check the power for 20m, change the MNs (in case they help for lower current). And just submit off the cascode one.
+The 20mA one gives 104mA. It's just not worth pursuing. I'll just check the currents for different MN values with the cascode.
+
+Ok, I think in general, the values with lower P1dB give lower power consumption (because I ran it with sweep on by mistake).
+So I need to record values of P1dB,i also now ahhh.
+The MN that gave Rin=25 has P1dB,i=-13.49, IDC=74m.
+
+frf=3.5G, Rin=12.5, Ib=30m, m=1800:- P1dB,i = -11.95, IDC=82.3m
+frf=3.5G, Rin=12.5, Ib=30m, m=1900:- P1dB,i = -11.74, IDC=84.7m
+For Ib=40m, mn=1800 has the lowest P1dB,i=-12.96 that passes other specs. IDC=95mA.
+
+Ugh, increasing Vb2 decreases the P1dB vastly. But it screws with the P1dB,o and AM-PM.
+Huh? Ok maybe just decreasing P1dB,i does not help with current.
+Because - Vb2=1.3, Rin=25:- P1dB,i=-15.71, IDC=79m
+But Vb2=1.13, Rin=25:- P1dB,i=-13.49, IDC=74m
+Vb2=1.0, Rin=25:- P1dB,i=-12, IDC=72m
+Vb2=0.9, Rin=25:- P1dB,i=-11.15, IDC=69m (AM-PM looks wierd)
+
+For Rin=25 MN, at 20mA, it is hard to get 3degree without bump. But P1db,o chilling.
+Ok, Rin=25 MN, at 25mA gives at mn=1600, Vb2=1.1. IDC=66.7mA
+Ib=23m also edges 3degrees (passes) for mn=1700, Vb2=1.1, IDC=66.7mA. Hmm, not that different from 25mA at all. Will go with 25m only.
+
+1 sad thing is that I am not going to split mn and mncas. I didn't do it in any other project also cha. Little loss of learning, but lite only.

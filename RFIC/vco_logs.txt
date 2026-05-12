@@ -1,0 +1,616 @@
+13.4.26
+Hmm, not able to get satisfactory amounts of work done everyday. Also starting 1 day before the og deadline is ballsy.
+Divide by 2 circuit is concerning. Not sure if the meta is to go with the capacitor bank or not; and if I do, I am unsure about how to comprehend some of the specs, like nomial KVCO and 33% frequency overlap, like nominal how and how do I calculate overlap?
+Broooo, no way, the help doc didn't give the circuit.
+So, the question of nominal KVCO is cleared, it is just the average.
+But what about the other ****ing problems! Do I use a capacitor bank? How do I simulate for it if I do. What about the ****ing D-FF circuit???!!!
+Ok, calm down. First thing to do is to build an O that gives me Os.
+Then maybe build a varactor. How do I check the validity? Is the best way just to put it in the VCO and see? Or can I plot the capacitance 1st vs VBG? Yea this makes sense.
+Another issue is when sir attached B to VDD, he still drew the graph wrt VBG, not VDG. But I think that is his fault, I will google and check. Yea.
+Then a D-latch. Sir pointed us to not use his D-latch designs in class, but instead use some high-freq. D-latches for the flip-flop.
+In the given symbol, they have given an 8-bit input, which I don't know how to use in the testbench.
+Smart guy, didn't disclose the values for anything, not even the caps, only KVCO.
+Offo, I was wondering why it was stuck at 0.7V; I have to disturb the circuit.
+Hmm, the nMOS CCO ran without errors, but had a pV waveform.
+Giga amps when I put initial voltage for caps, oof. But the voltages were like nV and mV. Soo, why is my indq not letting 1.2V at my bias. 
+Used ideal L and R and nothing converges when I put initial voltage on caps.
+Sooo, I am an idiot? When I used the values of L and C in that YouTube video, oscillations started. Maybe I should check my calculations for the freq. and also change the minimum timestamp to see why it wasn't working if the calculations were correct.
+I can already tell that I missed a ****ing 2*pi term again mother****er.
+
+14.4.26
+Works for L=905p, C=270fF; w=5u or 100u, Id=1mA. 1mA pulse of width 3ps, rise, fall time=1ps.
+Ok, it is oscillating for my values also (maybe the problem was my initial voltage for startup), but my time period is cooked. It is like 4.48GHz (225ps) when it should be like 7GHz (143ps). 
+Interesting, I think that was because of the parasitics, because it became 150ps when I changed w to 5u. Yea, Cgd went from 2f to 40f (w from 5u to 100u) when my C is 200f.
+CCCO xxxxx wn=wp=5u, Ib=1m, R=4k, L=200/14pi nH, C=5/14pi pF. gmn=1.46mS, gmp=0.71mS. Tp=153ps. 2/(gmp+gmn) = 921.6 < R = 4000Ahh, but for these values, my tail current MOSFET is in triode. Just use the nMOS or pMOS CCO. 
+But there is also the problem of indq not biasing properly, ooof. It biased in the CCCO, but I am not sure about the nMOS CCO.Huh, it happened in this also, damn.
+
+So, the varactor is kind of according to theory, but this is only using 1 pMOS. I am unsure about how to measure capacitance with 2 pMOSs; maybe I'll find a cadence implementation for an inversion mode varactor.
+Also I saw the regions, it was never in 2 (satu) - it went from 0 (cutoff) -> 3 (sub-threshold) -> 1 (triode).
+So, increasing w increases the Cgd itself available by a lot, but sir warned us against large varactors, because large KVCO comes, more phase noise.
+Hmm, when I used DC sims to find, Cgd showed between 1.9f and 5f. But putting port and seeing IM(Z11) is giving between 4.4f and 9.5f.
+When I put 2 caps, it became 2.2f and 4.7f (half and half).
+
+Ok, so the guy from YouTube said something about avoiding triode, ummmm. Oh, wait, the region 0->3->1 was in the varactor, stupid. 
+So, my differential voltage is like 2.2V, which is too high. So I can change that.
+
+15.4.26
+So, only my nCCO is in saturation. Other tail MOSFETs are in triode. I should either increase my w (gm increases) or decrease my Id (amplitude decreases, but so does gm, so need to increase R) to change that.
+Tradeoffs:- If I make my C needed smaller, it may be taken over by parasitics, but that's fine.
+I can decrease my output amplitude by - decreasing Id (good), decreasing R (L) (but this increases cap needed).
+
+Am I crazy, why is it starting up with gm=1mS, 2/R=6.3mS?
+Ok, so, it only failed to oscillate when gm=0.5mS (nCCO), 2/R=6.3mS.
+For all oscillators, xxxxx w=5u, Ib=0.2m, L=4.54n(L/2) (R/2=630), gmp=0.7mS, gmn=1mS - oscillations (should not startup, but it does) with like 1.8V amplitude. Everything in satu.
+
+Also, my bank caps do in fact add to the varactor capacitance. Cap needed is around 115fF. I have 5fF switching control. So, I will just put my varactor with a 2*108fF bank and see what KVCO I get etc.
+Bc, lost 10mins because my latop hanged and it downloaded some 20 Windows updates when it came back on.
+Hmm, I added double the capacitance by mistake, and along with time period increasing, the amplitude plummetted. I wonder why the capacitance value had anything to do with the amplitude!
+But, I am pleased to inform that it is more or less working even with a fixed varactor (except for the Mx is -ve warning). Now, I have to see what happens when I actually change the vctrl and see. But, break now even though I don't really want it that bad.
+
+So, in the help doc, man used no. of steps as 10m. How did he get away with that.
+Hmm, my freq. ranges from 6.5G to 6.26G. Interesting. I actually might be able to get away with a single capacitor in the bank (no switching) if my other params are good.
+pVCO xxxxx L=4.5n, C=86f, wc=10u, Ib=0.2m, wp=5u:- 2A=1.9V, freq. from 7.16G - 6.85G, KVCO - gone.
+Ohh nooo, I think amplitude is pk, not pk-pk. I think I need minimum 2.4V pk-pk! But, I think just increasing Ib later fixes it.
+So, I need a smaller varactor (KVCO is too high - like 100 to 400, when it needs to be 70). Also, my KVCO is the bell-curve that sir showed. Jaival said that it needs to be as straight as possible.
+If I reduce my varactor size, what happens? My freq. will change, but that can be fixed by changing C0.
+Bottom line - reducing wc gives more KVCO flatness, but decreases the frequency range for which that KVCO is valid.
+So I am mainly thinking about what changing the {fraction of the cap. needed that can be changed by vctrl (essentially the total cap.)} does to KVCO flatness, KVCO and the freq. range. Irrespective of the needed cap. if you realize fmin-fmax with the same range in 0-1.2V, the KVCO value will be the same. How about the flatness though?
+So, it seems like - decreasing Cnet needed betters KVCO flatness and increases the range over which my frequency is affected, but causes wiggly KVCOs (important).
+pVCO xxxxx L=9n, C=37f, wc=10u, Ib=0.2m:- 2A=3.3V.
+I think 4.5n is better, but can use slightly higher if increasing Ib is causing problems when trying to achieve 2.4V pk-pk.
+Need to ask Ani - is the KVCO=70 for before or after the by-2 (if it halves or doubles); is it ok to not count the NL in the switches of the caps. in the bank if we manually switch for every range, how many caps. in the bank are ok, is 1.2V pk or pk-pk?
+
+So, i think i need to - have the fixed cap. for the highest freq. and then start adding bank caps. for the decreasing freq. ranges.
+pVCO xxxxx Ib=0.2m, wp=5u, L=3.0n, C=152f, wc=1.6u:- 2A=1.3V, KVCO=71M. 450-600mV. 8MHz/100mV. 10MHz (ignoring 1/3rd overlap)
+pVCO xxxxx Ib=0.2m, wp=5u, L=4.5n, C=95f, wc=1.6u:- 2A=2.0V, KVCO=69M. 450-600mV. 8MHz/100mV. 10MHz (ignoring 1/3rd overlap). 24MHz - 6M dip (350-700mv)
+pVCO xxxxx Ib=0.2m, wp=5u, L=6.0n, C=66f, wc=1.6u:- 2A=2.5V, KVCO=73M. 450-600mV (wiggly). 8MHz/100mV. 10MHz (ignoring 1/3rd overlap)
+What changed? Not much honestly. This is a free amplitude glitch till it becomes wiggly if I need it I guess. I'll go see for other Ibs ah.
+pVCO xxxxx Ib=0.4m, wp=5u, L=3.0n, C=150f, wc=2.8u:- 2A=2.4V, KVCO=67M. 400-650mV. 8MHz/100mV. 16MHz (ignoring 1/3rd overlap). 30MHz - 5M dip (300-750mv)
+pVCO xxxxx Ib=0.4m, wp=5u, L=4.5n, C=91f, wc=2.8u:- 2A=2.4V, KVCO=74M. 400-650mV (wiggly). 8MHz/100mV. 18MHz (ignoring 1/3rd overlap)
+Goes into triode for Ib=0.5m. Maybe I will see for a higher width. Should I split the widths of the mirror MOSFETS and my gms?When I increased my wpmir, KVCO decreased to 64, became more wiggly. No change in 16MHz. Also amplitude became slightly higher. (important)
+
+16.4.26
+
+Oh, I just remembered - Sir told us to operate just where the amplitude saturates with current, because the MOSFETs go into triode. Oh ****, I can't see this in the DC sims, I will probably have to run only and see the A values.
+The wiggliness doesn't necessarily linearly change with wc (KVCO) or with Cfixed; maybe there can be a point where it is less wigglier if accuracy in KVCO is not important. (important)
+pVCO xxxxx Ib=0.6m, wp=5u, L=2.0n, C=230f, wc=4.2u, wpmir=20u:- 2A=2.4V, KVCO=68M. 400-650mV. 7MHz/100mV. 17MHz (ignoring 1/3rd overlap)
+pVCO xxxxx Ib=0.6m, wp=5u, L=3.0n, C=145f, wc=4.2u, wpmir=20u:- 2A=3.3V, KVCO=73M. 400-650mV (wiggly). 7MHz/100mV. 17MHz (ignoring 1/3rd overlap). 37MHz - 5M dip (wiggly) (250-800mv)
+pVCO xxxxx Ib=0.6m, wp=5u, L=4.0n, C=102f, wc=3.6u, wpmir=20u:- 2A=x.xV, KVCO=68M. 350-700mV (less wiggly). 7MHz/100mV. 25MHz (ignoring 1/3rd overlap)
+(No oscillations at L=1n, too wiggly at L=5n, but may find a stable point if lucky)
+For higher L, change in Cfixed affects KVCO's value, so wc also needs to be tuned.
+
+Tail goes into triode for Ib=0.8m. Will change wmir to even higher and see.
+Running both tran and pss together is giving seg fault now wtf.
+Increasing wmir=50u - increased wigglyness, decreased vctrl range (freq. range).
+pVCO xxxxx Ib=0.8m, wp=5u, L=1.5n, C=312f, wc=5.5u, wpmir=50u:- 2A=2.3V, KVCO=69M. 400-650mV. 7MHz/100mV. 17MHz (ignoring 1/3rd overlap). 25MHz - 4M dip (350-700mv)
+pVCO xxxxx Ib=0.8m, wp=5u, L=2.0n, C=228f, wc=5.5u, wpmir=50u:- 2A=3.0V, KVCO=71M. 350-700mV (wiggly). 7MHz/100mV. 25MHz (ignoring 1/3rd overlap)
+pVCO xxxxx Ib=0.8m, wp=5u, L=2.5n, C=175f, wc=5.1u, wpmir=50u:- 2A=x.xV, KVCO=71M. 400-650mV. 7MHz/100mV. 18MHz (ignoring 1/3rd overlap)
+(1.2Vpk-pk at L=1n, too wiggly at L=3n)
+Noo, it was supposed to get better; it stagnated? Maybe try a better wmir value like 35u I guess and see.
+
+Ani said:- 1.2V 0->pk, 70MHz before the freq. divider. Need MOSFETs to switch the bank (max 8). KVCO variation lite, keep nominal at 70MHz. Freq. divider just gives a square wave at half the frequency that is 0, 90, 180, 270.
+Can always find a better, non-wiggly thing at a higher L (but unsure as to how that'll work when there is the capacitor bank). But now I need something drastic! I need like 100MHz to be comfortable. Otherwise I'll just have to use some cooked ass KVCO that is not constant. I think that drastic thing is - chaning the width of the main MOSFETs.
+Even with the most cooked KVCO I can allow, I get like 40MHz, which is horrifying.
+****kkk, the report template has a lot of good info. Like graphs, circuits and all. Adding an Rbias didn't do anything much (may have changed my wiggles slightly).
+
+Increasing w:- Decreases amplitude slightly (negligible); definitely changes KVCO; need to see flat range; gives opportunity to increase current a loooottt.
+Same laws for higher ws also; 7MHz/100mV, more wiggly, but feels like it is contant for longer. No, smaller wn is objectively better for both wigglyness and plateau.
+
+Ahhh ****k, as expected, changing Cfixed still causes wigglyness if I find a non-wiggly Cvarac for some Cfixed. So, no point in seeing that; just see overall wigglyness and (essentially) quality factor.
+
+Will try for 3u, but it goes to triode; will increase wmir and decrease Ib.
+
+17.4.26
+Ok, so I calculated:- 30MHz - 10*2 caps needed; 39MHz - 8*2 caps needed; 45MHz - 7*2 caps needed; 60MHz - 5*2 caps needed.
+So, first, I will just make it with 7 caps so that I have something to submit. Then I will figure out the /2 and then the PN. Then maybe I will move to a CCVCO.
+pVCO xxxxx Ib=0.4m, wp=3u, L=3.0n, C=154f, wc=2.8u, wpmir=20u:- 2A=2.4V, KVCO=68M. 450-600mV. 7MHz/100mV. 10MHz (ignoring 1/3rd overlap). 30MHz - 5M dip (300-750mv)
+pVCO xxxxx Ib=0.4m, wp=3u, L=4.0n, C=115f, wc=2.8u, wpmir=20u:- 2A=x.xV, KVCO=70M. 400-650mV. 7MHz/100mV. 17MHz (ignoring 1/3rd overlap). 37MHz - 5M dip (250-800mv)
+pVCO xxxxx Ib=0.4m, wp=3u, L=5.0n, C=xxxf, wc=x.xu, wpmir=20u:- 2A=x.xV, KVCO=70M. 300-750mV. 7MHz/100mV. 30MHz (ignoring 1/3rd overlap). 39MHz - 5M dip (wiggly) (250-800mv)
+Wow, I have messed up recording so many values.
+pVCO xxxxx Ib=0.5m, wp=3u, L=3.0n, C=154f, wc=3.5u, wpmir=20u:- 2A=2.8V, KVCO=71M. 400-650mV. 7MHz/100mV. 17MHz (ignoring 1/3rd overlap). 32MHz - 5M dip (300-750mv)
+pVCO xxxxx Ib=0.5m, wp=3u, L=3.5n, C=130f, wc=3.3u, wpmir=20u:- 2A=x.xV, KVCO=70M. 400-650mV. 7MHz/100mV. 18MHz (ignoring 1/3rd overlap). 38MHz - 5M dip (250-800mv)
+pVCO xxxxx Ib=0.5m, wp=3u, L=4.0n, C=115f, wc=3.2u, wpmir=20u:- 2A=3.4V, KVCO=70M. 400-650mV. 7MHz/100mV. 18MHz (ignoring 1/3rd overlap). 41MHz - 5M dip (250-850mv)
+pVCO xxxxx Ib=0.5m, wp=3u, L=4.5n, C=98f, wc=3.1u, wpmir=20u:- 2A=3.7V, KVCO=73M. 400-650mV. 7MHz/100mV. 18MHz (ignoring 1/3rd overlap). 43MHz - 5M dip (wiggly) (250-850mv)
+pVCO xxxxx Ib=0.5m, wp=3u, L=5.0n, C=89f, wc=3.0u, wpmir=20u:- 2A=x.xV, KVCO=73M. 400-650mV. 7MHz/100mV. 18MHz (ignoring 1/3rd overlap). 45MHz - 5M dip (wiggly) (200-850mv)
+So, it seems like - the range for 5M dip extends with higher I and higher L for a wp, but so does wiggle. Increasing wmir contracts it I think. No it doesn't, but still for some reason, the range saturates/decreases with higher I.
+pVCO xxxxx Ib=0.6m, wp=3u, L=3.0n, C=153f, wc=3.6u, wpmir=30u:- 2A=x.xV, KVCO=66M. 400-650mV. 7MHz/100mV. 17MHz (ignoring 1/3rd overlap). 36MHz - 5M dip (250-800mv)
+pVCO xxxxx Ib=0.6m, wp=3u, L=4.0n, C=112f, wc=3.6u, wpmir=30u:- 2A=x.xV, KVCO=75M. 300-700mV. 7MHz/100mV. 30MHz (ignoring 1/3rd overlap). 40MHz - 4M dip (wiggly) (250-800mv)
+For the same current, changing wmir hardly makes a difference; it could be used as an illusion to save 1MHz/V or so.
+Ok, dude. I am either recording wrong values or the simulator is not consistent. I am ****ing pissed at my self. Ok no, I am convinced the simulator is changing now, what the ****.
+
+Ok, just do the bank for Ib=0.5m, wp=3u, L=4n, C=115f, wc=3.2u, wmir=20u. (250-850mv)
+Cfixed = 111f, C0=0.9f, C1=1.9f, C2=2.9f, C3=3.9, C4=4.9f, C5=5.9f, C6=6.9f:- (wow, 10f is enough to cover the range).
+7.106-7.064, 7.081-7.039, 7.053-7.011, 7.026-6.984, 6.999-6.958, 6.972-6.931, 6.946-6.905, 6.920-6.879.
+Important points - so, the thing wasn't symmetrical anymore between 250-850mV, with KVCO at 0.85 being significantly lower. KVCO itself also fell (but slowly). So, I recommend starting at 73 or 74 for the nominal to actually be 70.
+
+Huh, I actually got inspiration (thanks to Sooraj ki bahon mein?) to think about - if I get 70MHz/V KVCO and my KVCO is perpeerly flat between 0.6V of the control voltage, that will give me 42MHz of change, which is what I am anways getting, but without a fully flat KVCO. 
+So, Jaival probably used a pregnant KVCO or his spec was not 70MHz/V. Ohh, he only had to change over 70MHz, unlike our 200MHz. Wow, knowing this makes me feel so much more better.
+Also, I remember being excited about having a graph that was 7.1MHz till like 0.4V and then 6.9MHz from 0.8V; and being sad that my current graphs don't have constant ends. But that graph is shit, because it will be a very sharp KVCO. Having a slow (70MHz/V) changing graph that is spread out over a large Vctrl is better.
+
+After feeling better because of that, I can start feeling worse again when I add the MOSFETs to switch my capacitors and see if it messes something up. I am assuming w,lmin because parasitics.
+I think it'll work; like it will change the values, but putting MOSFETs should not make it un-usable (my god, what is this optimism? Is it because I put music?). All the big ON capacitances are around 110a(=0.1f) and the biggest like 250a. For OFF, some are 150a, 50a and all, but a lot are like 1a or some 'y'.
+Also realized that I can actually have 9 divisions because of the 8 caps., since no cap. is 1. I can try using a flatter KVCO, but all this I'll do later. Now, I'll just make a rudimentary answer with uneven left and right KVCOs, whose nominal KVCO is not exactly 70MHz/V and is not the best KVCO flatness I can get (because I am using only 7 caps.). (important)
+After this, I will have to figure out the /2 and the D flip-flop.
+Cfixed=110.5f, C0=1.1f, C1=1.1f, C2=1.1f, C3=1.1f, C4=1.4f:- (240-810mV, not the best for all, but figure out optimal one later)
+7.110-7.070, 7.084-7.043, 7.059-7.017, 7.034-6.991, 7.009-6.965, 6.979-6.934, 
+Ok, I am stopping midway; the peak KVCO increased from 73 to 83 when I switched them all on. If the avg. value of a KVCO segment is top-3; and it changes from top to top+10, start with top=68, not 73.
+
+Actually, tomorrow, don't even do this, just start off with the latches and the PN.
+
+18.4.26
+Wow, what is this beginner's fatigue.
+My mirror MOSFETs exceeded breakdown voltage, but they weren't biased sooo.
+Also, my peak-peak amplitude is so less now (like 1.6). It's not because I am loading it right... Idiot, checking the single ended amplitude and calling it differential.
+Yea, so ****ed only - the output is from 1.2-1.1V and is some wierd-ass shape. Not sure what to do.
+Hmm, so jaival buffered it with an inverter. Shit, I needed to ac couple because my single ended oscillations are from 0.8 to -0.8. Hmm, I could have realized on my own no, from the fact that evertything was at VDD? Cha, should have thought for more time before texting Jaival.
+So, when I increase the multiplier from 1 to 3, the vcm increases, but the CLK and CLKb intersect at a higher and higher voltage.
+For m=1, Vb=555mV, but they intersect nearly at halfway, but mid-point is not 555mV. If m=3, Vb=0.6 and it is the midpoint, but CLK and CLKb intersect at like 0.8V.
+And why the frick is it not a square wave?
+So, I am testing in the test_world and the pmos is struggling to pull up the output for some reason. ****ing hell, it was because I forgot to put the source for VDD.
+So, when I self-bias the inverter, the input is 1.2V above my Vsoucre, whereas it should be 0.6V above, which is the bias point.
+
+In the current mode latch - when CLK is 1, Q=D (if D=1, Qb, which is above D is 0 and Q is 1, because no current through it). When CLK is 0, D doesn't change Q, because no current can flow; Q=Q only, if Q was 0, M3=ON, M4=OFF - Qb=1 and Q=0. If current flows through a MOSFET, its drain should become 0.
+Nagi video for current mode latch:- https://www.youtube.com/watch?v=tL4wiMWPJd4
+
+Ok, my simulator has ****ing lost it (like the error message 'cannot trust any output the simulator gives). It is taking my transient value as the DC point or some ****ing retarded shit. I will take a break and then try again.
+****ing bloody hell, what the ****. I deleted test_world and now I am not able to open a ****ing maestro in the new test_world.
+Bro, I feel like a clinically insane person right now; my CLK is not a square wave, even though my CLK is fine, my latch outputs are not right (which is fine because 1st try), but when I try to debug in the test_world, **** all happens.
+So, apparently it was because my decoupling capacitor was too high and steady state was not reached fast. For Cb=1p, it was reached in like 0.2us. I had 1u (how did Jaival realize so fast?).
+So, Jaival told me to use another inverter after this one. It has actually been a while since I hated myself this much.
+Wow, it is working for 100u also in the actual one.
+Just to clarify - I am not going crazy - when I deleted all labels, the waveforms became different. Maybe it was because of invisibly linked nets because of some copy-paste. I am not going crazy. And nothing changed when I changed Cb from 100u to 100p; I am not going crazy.
+Oh, the waveform gets ****ed when I connect it to the gates of the current mode latch, not because of any label mismatch.
+I was going to say that today is just not the day for RFIC, so go do AIC. But maybe I need to perturb the flip-flop to start oscillations? This is ignoring the fact that my waveform is not a square wave anymore.
+Maybe it is because of the gate capacitance that the inv is not able to drive the output fast enough. Should I increase my sizes then? Should I increase my 1st inv's size also? Any change in vo when I connect the CLKs? Not much.
+Hmm, now Cb's value comes into play and it doesn't settle for even 1pF. This is very intricate to figure out on my own. So, when I increased the m, vo couldn't settle fast enough, so probably increase it for the 1st inv also.
+
+So, increasing m (for both) seems to help - but it gives warning - 'relaxing LTE something to step over discontinuity'.
+Higher m decreases amplitude of Vx and Vy itself. Ahh ****, it is going to affect the KVCO graphs also isnt it.
+m=1 - 1.7V, m=5 - 1.6V, m=10 - 1.4V, m=25 - 0.4V.
+For m=3, they cut at 0.7V, trise=29ps. m=10:- 0.64, 28ps. m=15:- 0.61, 26ps;
+Shit, it's not about the crown; it is about the rise/fall time.
+
+Wait, I don't have to perturb it; it should invert on its own. It is either the latch design that is wrong, or it doesn't have enough power to drive the caps. in time. I'll try with a single ended latch and see (whose architecture I know).
+For single ended latch (that tspc frequency divider, researchgate with 9 MOSFETs) - 
+CLK=1, Q=1, Q1=0(h), Q2=0 -> CLK=0, Q=1(h), Q1=0, Q2=1 -> CLK=1, Q=0, Q1=0(h), Q2=1(h) -> CLK=0, Q=0(h), Q1=1, Q2=1 -> CLK=1, Q=0, Q1=1(h), Q2=0 makes Q=1, Q1=0, Q2=0(h) -> CLK=0, Q=1(h), Q1=0, Q2=1 and so on...
+General latch (CLK, D, Q1, Q):-
+(1, 1, 1, 0) -> (0, 0, 1, 1) -> (1, 0, 0, 1) -> (0, 1, 0, 0) -> (1, 1, 1, 0)
+And cadence is not letting me 'q' my MOSFETs, **** it all.
+Loading the single ended also makes it less of a square wave. So, I will happily take the wave I am getting; my main problem is going to be the PN only. I am unsure as to which one is supposed to be the 90 degree signal, so I will put an ideal square wave and see.
+So, it seems like in the square wave also, it is not able to switch fast. In fact, no matter what m i give, it is still slow only; I think because first Q2 has to become 0; then only Q can become 1.
+So, it is clear that Q1 is actually I (and Q2 is actually a 75% duty wave), but it is not obviously seen, maybe at such high freq. because of the double switching in a CLK. Maybe i'll decrease the freq. and see if the latch is any good.
+Oof, it is so good for low freqs. (1GHz), but Q1 is not actually I, because it also goes down when Q goes up (I though it was held at 1 because of how it looked at 7G). So I just cannot get 90 degrees from this, but I can scam Q1 as 90 degrees maybe at 7GHz.
+So yea, once you explain it with a square wave, it is easy to explain with the 'kind-of' square wave we get. Can also figure out good multipliers for the inv and the lat.
+
+Need to get the current mode latch to work in test world (with ideal square wave, ideal tail current source 1st), or find another latch that also gives 90 degree.
+For simple Tgate -> inv:- (D=Qb always excpet for some constant delay)
+CLK=1, D=1(h), Q1=0, Q=0(h) -> CLK=0, D=0, Q1=0(h), Q=1 -> CLK=1, D=0(h), Q1=1, Q=1(h) -> CLK=0, D=1, Q1=1(h), Q=0 -> CLK=1, D=1(h), Q1=0, Q=0(h) and so on...
+Brooo, it works decently for ideal square wave at 7GHz (perfectly for 1GHz).
+Also I figured (I think) about how to make the differential circuit work - I think I need to force the 2 opposite voltages to stay opposite till a transient is reached, or like force them to become opposite after steady state? 
+But there shouldn't be a stable state, it just doesn't make sense. There actually is a stable state; is there an oscillating state though, never though about it lol. Lite, I'll just force them and see.
+Ok, I am just not able to figure out how to perturb it or get it out of the stable state; i'll text Jaival and sleep now, it is 2:15.
+
+19.4.26
+So, setting initial conditions didn't help (simluation -> convergence aid -> initial conditions).
+Dude, my cadence is officially ****ed. Somehow, the plotting order in maestro is jumbled and I am not able to move it around now.
+So, D and Db are not 90degree apart even for low freq. and for ideal square wave input. Irrespective of whether I set IC or not.
+
+So, the CML is working kind of, for ideal conditions, but its low is only 0.6V. Oof, I think it means that it is working. My w=5u makes it work, but not w=1u.
+Increasing RL increases the amplitude, but makes it more distorted.
+Oh wow, it looks ****ing horrifying for 7G. 
+I think it is slightly better for higher tail current.
+I'll try giving double inverted sine wave instead of ideal square wave now. The waveform looks surprisingly better with non-ideal square waves. It also has like 1V pk-pk (single ended) now, as against like 0.6V before.
+So, higher bias current is definitely better, both for shape and amplitude. Higher w also better (even though the input waves are a lot lesser like a square wave).
+Need to check if it works with my sinusoids generated by my CCO.
+For 5um, 1mA, minv=5:- CLK goes from 1.1-0.1V (shaped horribly) and D,Q go from 1.2-0.6.
+For 5um, 2.5mA, minv=5:- CLK goes from 1.1-0.1V (shaped horribly) and D,Q go from 1.2-0.5.
+Nagi video - M3,4 need to be large to meet setup and hold time; M5,6 just needs to have gmR>1. Reduce hold time by increasing size of M5,6. Reduce setup time by increasing size of M3,4.
+
+Now to put eveything together and get ****ed by the phase noise spec.
+So, I was getting Imelt exceeded warnings in the vco_bank, but not in the vco_only. Now, in VCO_full, I am getting both Imelt and Vbreakdown warnings. Lite.
+Also, in main form of the pss, I am getting the 1st harmonic at 3.5G, but I think it is just because of the existence of the divider.
+Yea, that seems correct, because even when I selected Q and D as the oscillator nodes, both the freq. and KVCO graphs were the same, both for 3.5G and 7G.
+In fact, even when I selected node+=Vx and node-=D, nothing changed hahahahaha.
+Just having a bit of fun before I get served to the PN as dinner.
+
+So, PN is taking a billion years to run. I'll just take my break. You know, this is really bad because I can't use cheap tactics to reduce my PN. Oh it's done; it only took like 2 mins.
+I still want to try using hb also for finding PN.
+Oh, it took so long because I was sweeping Vctrl, shit.
+****kkk, it is -111dBc/Hz at 1M (need -122) and -137dBc/Hz at 20M (need -154)
+How to decrease? I want to see the noise just at the VCO, to see which one is the major contributor.
+Also I have to talk about how the laptop hanged and was not switching on; and me and GPT tried everything in vain. But just as I was going to the DCF, I toggled the lid and it came.
+Well that didn't work - it was at like +132dBc and it was increasing with freq.
+Decreasing current to 0.4m actually worsened it - made it -105, -132.
+The switch MOSFETs do not contribute to the phase noise (important).
+Decreasing L to 3n (from 4n) made PN = -114, -138 (from -111, 137)
+Ok, something made it worse and I don't know what. So
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-105, -131. 7.1G (reference)
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=110f, wc=3.2u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-111, -137. 6.9G - check at the highest freq.
+wc or Cf alone didn't do much - it was a mix of them.
+xxxxx Ib=0.5m, wp=3u, wpmir=15u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-107, -133. 7.1G - lower wpmir is good.
+xxxxx Ib=0.4m, wp=3u, wpmir=15u, L=4n, Cf=105f, wc=2.5u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-108, -134. 7.1G. 2.6V - so decreasing I is good?
+xxxxx Ib=0.4m, wp=3u, wpmir=10u, L=4n, Cf=105f, wc=2.5u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-110, -135. 7.1G. 2.6V - lower wpmir is good.
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=3n, Cf=145f, wc=3.0u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-113, -137. 7.1G. 2.5V - lower L is good.
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=5, wl=5u, RL=0.5k, vctrl=0.6, all off:- PN=-107, -129. 7.1G - lower RL makes it decrease slower - so higher RL is good.
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=5, wl=5u, RL=2.0k, vctrl=0.6, all off:- PN=-115, -140. 7.1G - lower RL makes it decrease slower - so higher RL is good.
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=5, wl=5u, RL=5.0k, vctrl=0.6, all off:- PN=-105, -132. 7.1G - but not too much, because then PN increases.
+Ok, I plotted all RLs from 1k-4k. Some magic happens around 2k - others all have same PN, but 2k is very less.
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=2m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-106, -133. 7.1G - no change for Ibd?
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=5m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-110, -137. 7.1G - slightly better for high Ibd
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=10m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-110, -137. 7.1G - but only to some extent
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=5, wl=3u, RL=1k, vctrl=0.6, all off:- PN=-105, -137. 7.1G - more dip for low wl
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=5, wl=15u, RL=1k, vctrl=0.6, all off:- PN=-110, -130. 7.1G - more dip for low wl
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=2, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-113, -131. 7.2G - better at 1 only for low minv
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=10, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-112, -139. 6.9G. 2.7V - better for high minv (no, freq. decreased)
+Not much change in PN if you fix the 1st inverter and change the 2nd inverter. But waveform is beautiful - so this is free.
+I am out of tricks - all I have left is to change wp and then add that magic inductor. Magic inductor - I don't know how to use, so my only way after wp is Jaival.
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=5n, Cf=80f, wc=2.5u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-114, -139. 7.1G - high L is good (contradiction, but can find a minima point. And I also think decreasing wc helped)
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=6n, Cf=64f, wc=2.5u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-112, -139. 7.1G
+xxxxx Ib=0.5m, wp=5u, wpmir=20u, L=4n, Cf=95f, wc=3.0u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-100, -128. 7.1G - higher wu is bad
+xxxxx Ib=0.5m, wp=3u, wpmir=40u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off:- PN=-105, -134. 7.1G - higher wpmir is bad?
+*Slight possibility to scam by putting beat frequency as 3.6G because it became (-114, -137)
+From reference:- Lmagic=1n:- (-106, -132)
+From reference:- Lmagic=2.5n:- (-116, -138)
+From reference:- Lmagic=5n:- (-96, -124)
+From reference:- Lmagic=6-10n:- (-117, -140)
+The graph went down near 2.5n, then went up till 4n and then started decreasing; it saturated after 6n.
+xxxxx Ib=0.5m, wp=2u, wpmir=20u, L=4n, Cf=108f, wc=2.5u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-115, -140. 7.1G. 2.7V 
+xxxxx Ib=0.5m, wp=2u, wpmir=20u, L=4n, Cf=108f, wc=2.5u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all on, Lmagic=0n:- PN=-112, -137. 7.1G. 2.0V
+Major problem - when all ON, KVCO went from 75 to 90. And amplitude went down a looot. And when all were ON, freq. was like 6.98, not even 6.9.
+
+xxxxx Ib=0.5m, wp=2u, wpmir=20u, L=4n, Cf=108f, wc=2.0u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-115, -139. 7.1G. 2.7V (final resort)
+Ok, RL doesn't help. ****. Ok, Lmagic doesn't help. ****. wl doesn't help ****. Ib doesn't help. ****. minv1 doesn't help ****. **** **** ****.
+
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=106f, wc=2.5u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-110, -137. 7.1G. (final resort)
+Rl ****. Lmagic helps a bit (Lmagic=9n:- -117, -140), wl does something. I was at the best minv1. wl also I tried.
+
+Randomly tried for L=8n. There also the best I could do was like -117, -140. I have given up. I will submit this only. After trying CCCO though. I think the ceiling for this design is like -117, -140.
+
+Hmm, the L has Q=20 at 3.5GHz. Wonder if that changes anything. I would think it only worsens shit no? Yea, it just makes sense that it makes everything worse.
+Don't give me false hope:-
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-119, -141. 7.1G. 4.3V. (reference)
+xxxxx Ib=0.3m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=2.5u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-96, -124. 7.1G. - decreasing Ib is bad.
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=2n, Cf=227f, wc=5.0u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-116, -140. 7.1G.
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=3n, Cf=145f, wc=3.7u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-121, -141. 7.1G.
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=3.5n, Cf=122f, wc=3.5u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-120, -142. 7.1G.
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=2.5n, Cf=178f, wc=4.5u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-109, -137. 7.1G.
+
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=3n, Cf=145f, wc=3.7u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-121, -141. 7.1G. (reference)
+Ok, Lmagic didn't help, I am at the optimum. increasing RL made it dip, but only till like -145. Tried minv1, minv, Ibd, wl.
+Decreasing Rb worsened PN, Cb didn't affect. Beat frequency glitch didn't help as well.
+
+xxxxx Ib=0.5m, wp=6u, wpmir=20u, L=3n, Cf=135f, wc=3.7u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-109, -136. 7.1G. 
+Ok, this literally proves my theory that sweeping Lmagic gives you the perfect PN for a given configuration.
+
+Do CCCO now! And then give up when that fails.
+Increasing wp, wn increases the amount by which the tail nmos is in satu.
+Bro, I can't get the diff. amp to be over 1.2 for the life of me (stuck at 1.2V only).
+Ok, I do not get the correlation of wn,p with Vo (the theory gives the opposite of what heppens in some regions).
+In vco_only:- Ib=0.4m, wp=wn=10u, wnmir=20u, L=4n, Cf=55f, wc=2.2:- Sweep vctrl from 0-2V. Gives 5MHz dip over 700-1050mV with ~65MHz/V and 7.12-7.06GHz.
+
+20.4.26
+For all OFF, 0.7-1V gives 20MHz change (5MHz/V drop). 0.65-1.2V gives 36MHz change (10MHz/V drop).
+Ok, first of all, increasing cap is increasing the freq. Like what the actual ****. It's almost like the bank caps. don't come across the Cfixed. Because Cfixed still drastically changes the freq. It is proper in view->net highlighting.
+Ok, adding a cap directly does the job, why not this?????!!!!
+Dude, the new cap I added gets ****ed when I use a MOSFET.
+Oh my God. I ported the pMOS CCO to test world and in that also, the MOSFETs are not adding the cap.
+Ok, wait no - in test world, it is decreasing with every ON of the bits (albeit with different values from before because of the 20Q at 3.5G).
+Ohh, wait. And it doesn't change if I just keep 1 ON and change that cap drastically. I wonder why that is that MOSFETs can't switch like 10f. Bloody wasted like half an hour.
+Probably because high cap|| low cap = low cap. So maybe I need to increase the sizes of my switch if I want it to affect more.
+
+So, very sorry about the scare. It works. This just means that I have to put in that much time to fine tune the values if I actually pass the phase noise spec.
+I also noticed in vco_full (pCCO) that the freq. was only decreasing till 7GHz, not 6.9GHz. I feel like that will also be a pain.
+And in CCCO, I don't know what demon it is, amplitude went from like 2.68V to like 2.52V when all were ON.
+Some guy in RFIC class gave me the idea that I actually don't need the double inverters in the CCCO for generating the square wave; I can directly feed the CML. But, I need to be careful about the gate capacitance loading my CCCO.
+
+Shocking revelation:- Without the divide by 2 circuit (pCCO, tried in test_world_):- (Jaival suggested doing, and I also had it in the back of my head)
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-114, -141. 7.2G. (worse than with /2 circuit)
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=3n, Cf=145f, wc=3.7u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-117, -142. 7.2G. (worse than with /2 circuit)
+And here, adding the switches actually ****s with the phase noise. For the L=4n values, it made PN=-105, -138.
+Lmagic did not help!
+Now I am thinking that it is directly related to only the freq., that is how far it is from 7.10GHz?
+* In vco_full (pCCO), changing the pss sim's settings to /D and /Q (instead of /Vx, /Vy) and beat frequency to 3.6G didn't change much at all.
+
+So yea, full confirm that I can omit the 2 inverters after the Vx, Vy because my bias voltage is already good. And since it is CCCO (zombie), I don't think loading it will do much.
+Now just to check that PN won't pass again.
+CVCO (with the 2 inverters):-
+xxxxx Ib=0.4m, wp=wn=10u, wnmir=20u, L=4n, Cf=50f, wc=2.2u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-97, -125. 7.1G.
+So get this - when I set Lmagic=0 normally (or when there is no Lmagic), I get the thing above. But, when I sweep it and Lmagic=0 is one of the points, it gives PN=-103, -130. 7.1G. What the **** lol.
+If someone reads this log, they'll think I am madman for accusing the simulator lol. I mean technically, I was mad when the Cb was 1u and Jaival reduced it. But I was frustrated and virtuoso crashed with the error message 'don't trust the results'.
+And my simulator has stopped simulating. Wait, why did it work after I cancelled and ran again XD.
+Lmagic=0.6n gives PN=-106, -135 when swept. It is -109, -136 stand-alone.
+
+I will try changing params, especially Ib, wp,n, wnmir and see what it does. I will also remove the 2 inverters and see what it does to the noise. But after break.
+So, as expected from the janasAgara outside the RFIC class, the deadline is extended by 3 days. Unfortunately, I saw it 2 hours late. Unfortunately the specs are unchanged, so if others meet it, I can't. But that lite. I'll extend my break by an hour or an hour and a half more, and then start AIC ass. I am sad/happy that I have less reason to bunk happiness now.
+
+22.4.26
+They are playing games with us. They made me change it from Q=20 @7GHz to Q=20 @3.5GHz and now they are making me change it back to 7GHz.
+So, I will change it in vco_full, make sure I am getting same specs as before. 
+Then change in cvco_full and maybe remove the 2 invs and see PN. Maybe also play around with wn, wp, Ib depending on how much time is there till the deadline. Then write report for the better of the 2.
+Then maybe see nvco.
+
+pVCO:-
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=3.0u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-105, -131. 7.1G (reference)
+Lmagic=11n gives best - (-117, -140)
+Slightly worse PN (-3dBc) when all switches ON, but main problem is that it is at like 6.91, not below it. That's fine only.
+But my KVCO is at 90 now, was at 77.
+Ah, I didn't check my amplitude.
+
+cVCO:-
+xxxxx Ib=0.4m, wp=wn=10u, wnmir=20u, L=4n, Cf=50f, wc=2.2u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.65, all off, Lmagic=0n:- PN=-85, -114. 7.1G (reference)
+Amplitude is 1.16V when all ON, 1.24 when all OFF.
+Lmagic=2n gives PN=-101, -133.
+PN gets ****ed when all ON. Becomes -88, -117. And the freq. is only 6.98GHz, not even close to 6.9.
+
+cVCO (without the 2 invs):-
+xxxxx Ib=0.4m, wp=wn=10u, wnmir=20u, L=4n, Cf=43f, wc=2.2u, Ibd=1m, minv=5, wl=5u, RL=1k, vctrl=0.65, all off, Lmagic=0n:- PN=-98, -126. 7.0G (reference)
+* I do see that the same Lmagic may not give the best PN at both 7.1 and 6.9GHz. So maybe it is good to achieve good PN without using Lmagic.
+Lmagic=1n gives -106, -134.
+PN gets ****ing ****ed to (-83, -110) when all are on. But amplitude is fine at 1.26V.
+
+nVCO:-
+I want to go to nVCO before checking out the PN when I change params in the CVCO.
+
+23.4.26
+Finalizing values for pVCO:-
+Ok, I get ****ed (like 3dBc worse) when switching ON all, even when it is not optimized by Lmagic.
+xxxxx (-114, -137) - ON, Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=105f, wc=2.5u, Ibd=1m, minv1=4, minv=3, wl=5u, RL=1k, vctrl=0.6, Lmagic=7n. Amplitude = 1.30
+
+xxxxx (-113, -136) - ON, Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=107.5f, wc=2.5u, Ibd=1m, minv1=4, minv=3, wl=5u, RL=1k, vctrl=0.6, Lmagic=7n. Amplitude = 1.29
+This seems good for submission except obviously the PN.
+
+Also I really really want to operate in like 0.5nH or 0.1nH and see the PN before giving up, or going to nVCO.
+PN=(-100, -132) for Cf=730f, L=0.5n, Ib=4m, wc=20u, wp=70u, wpmir=50u. (before /2). Not that much better with Lmagic.
+PN=(-98, -125) for Cf=20f, L=15n, Ib=0.2m, wc=1u, wp=3u, wpmir=5u. (before /2). Not that much better with Lmagic (-107, -133).
+
+Ok, tried it in the ee6320 repo; and it gave more or less the same results. But, I wasn't able to pass the 33% overlap properly (for 0.3-0.8V). I can tweak cap. values and still make it work. (Have saved the screenshot).
+But, I feel I can also use a higher wc to make it work better. Because the peaks went from 65 to 72. So maybe I should make the lowest peak like 68 or something.
+Can continue doing this stuff as long as the deadline is today. The second the deadline is extended, I want to try meeting PN specs, because any time I waste on getting final report-worthy values is just wasted if the PN spec doesn't meet.
+
+Huh, deadline is tomorrow by default, I thought it was today.
+0-33, 22-55, 44-77, 66-99, 88-121, 110-143, 132-165, 154-187, 176-209
+0-36, 24-60, 48-84, 72-108, 96-132, 120-156, 144-180, 168-204
+
+nVCO (without /2):-
+xxxxx Ib=0.5m, wn=5u, wnmir=20u, L=4n, Cf=100f, wc=3u, Lmagic=0n:- PN=-94, -130. 7.1G
+Lmagic gets it down to (-103, -134)
+Did I mention that I got 377 warnings when I ran pss sweep in nvco_full. Same old, Imelt and Vbd.
+
+*removing the switches with caps. did NOT help PN.
+
+Now I will start firing blind shots with my pVCO:-
+xxxxx Ib=0.2m, wp=3u, wpmir=5u, L=15n, Cf=16f, wc=0.7u, Ibd=1m, minv1=4, minv=3, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-92, -119. (KVCO is bad-looking).
+Lmagic:- -108, -131
+
+xxxxx Ib=0.4m, wp=3u, wpmir=20u, L=9n, Cf=38f, wc=1.5u, Ibd=1m, minv1=4, minv=3, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-108, -134.
+Lmagic:- -112, -137
+
+xxxxx Ib=0.5m, wp=3u, wpmir=20u, L=4n, Cf=107.5f, wc=2.5u, Ibd=1m, minv1=4, minv=3, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-109, -138.
+Lmagic:- -117, -138
+
+xxxxx Ib=2.5m, wp=30u, wpmir=40u, L=2n, Cf=122f, wc=7u, Ibd=1m, minv1=4, minv=3, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-103, -132. (How did C remain nearly const. for half L?)
+Lmagic:- -109, -136
+
+xxxxx Ib=4m, wp=70u, wpmir=50u, L=0.5n, Cf=730f, wc=20u, Ibd=1m, minv1=4, minv=3, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-106, -134. (May not be able to switch well for such high C.)
+Lmagic:- -109, -136
+
+24.4.26
+Sooooo - Vanchinathan Anna told me good? idea - to check noise summary for getting to know source of pnoise.
+Aaaanndd - 1 of Praveen's friends met the PN spec, apparently with a power of 16mW. So I cannot give up.
+Alsssooo - Now sir is telling us to use 70MHz/V as KVCO after the divider.
+However, for me (pVCO), lower currents are giving better PNs. NVM, I blind.
+Hmm, but I may not be able to switch well for high Cs. Butttt, PN is important. Focus on meeting that.
+
+xxxxx Ib=4m, wp=70u, wpmir=50u, L=0.5n, Cf=730f, wc=20u, Ibd=1m, minv1=4, minv=3, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-106, -134.
+wp can go as low as 45u (1.85V 0-pk). wp=150u:- (1.49 0-pk). This is without compensating the Cfixed.
+xxxxx Ib=4m, wp=45u, wpmir=50u, L=0.5n, Cf=820f, wc=20u, Ibd=1m, minv1=4, minv=3, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-111, -137.
+xxxxx Ib=4m, wp=100u, wpmir=50u, L=0.5n, Cf=620f, wc=20u, Ibd=1m, minv1=4, minv=3, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-105, -134.
+In the noise summary for wp=45u:- R0 (bias resistor) was giving 90% at 1M, but at 20M, a bunch of contributors are there. Mostly R0 (bias resistor) only, but M26, M25, M27 (2nd inverter)
+Hmm, it (Rb=0) actually brought down the PN at 1M to -123, but the one at 20M is still like -139. No other specs were affected noticeably.
+Without the /2 circuit, it gave -119, -148. With the contributors being the tails and transconductors.
+Increasing wpmir worsens @20M.
+Yea, I went to wp=70 and changed wmpir. Didn't help. Stagnated at like -115, -145 only (without /2 circuit).
+
+For Ib=0.5m:- -116 (trans, tail), -138 (2nd inv) (with /2).
+For Ib=0.5m:- -112 (trans, tail, L), -139 (tail, trans, L) (without /2).
+
+Should try for higher powers also later. Since it is from the tail and trans, I think I can do it.
+CVCO went from -98 to -104 (tail, pmos) and -126 to -135 (tail, pmos).
+Do I use the magic indu to help my tail? I cannot figure out any other way?
+
+So for Ib=4m, wp=45u:- msw=6 helps in changing the freq., but it doesn't affect the noise too much.
+How do I remove the noise from the 2nd invs? The 1st inv also contributes, but I'll first try to fix the 2nd.
+xxxxx Ib=4m, wp=45u, wpmir=50u, L=0.5n, Cf=820f, wc=20u, Ibd=1m, minv1=4, minv=3, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-123, -139.
+xxxxx Ib=4m, wp=45u, wpmir=50u, L=0.5n, Cf=820f, wc=20u, Ibd=1m, minv1=4, minv=10, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-124, -144. PN=-121 (tails), -142 (1st inv) (all ON)
+
+25.4.26
+xxxxx Ib=4m, wp=45u, wpmir=50u, L=0.5n, Cf=800f, wc=20u, Ibd=1m, minv1=10, minv=10, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-124, -147. PN=-120 (tails, trans), -146 (1 Rb, 1st inv, tail) (all ON). amp=1.51
+Becomes -120, 147 (1st inv, tail, RL) without the Rb.
+xxxxx Ib=4m, wp=45u, wpmir=50u, L=0.5n, Cf=780f, wc=20u, Ibd=1m, minv1=30, minv=10, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-120 (tails, trans), -148 (tail, RLs) (all ON). 
+Laptop hung twice, but came back.
+xxxxx Ib=4m, wp=45u, wpmir=50u, L=0.5n, Cf=780f, wc=20u, Ibd=1m, minv1=30, minv=10, wl=4u, RL=5k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-118 (1st inv, trans), -147 (2nd inv, tail) (all ON). 
+
+Just move to a ****ing higher current.
+xxxxx Ib=8m, wp=65u, wpmir=150u, L=0.5n, Cf=700f, wc=30u, Ibd=1m, minv1=5, minv=5, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-126 (tail, trans), -146 (invs). PN=-122 (tail, trans), -145 (invs) - all ON (but 6.99GHz).
+xxxxx Ib=8m, wp=65u, wpmir=150u, L=0.5n, Cf=700f, wc=30u, Ibd=1m, minv1=5, minv=10, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-121, -148 (1st inv, tail, RL) - all ON (but 6.99GHz).
+xxxxx Ib=8m, wp=65u, wpmir=150u, L=0.5n, Cf=700f, wc=30u, Ibd=1m, minv1=10, minv=10, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-121 (tail, trans), -148 (tail, RL) - all ON (but 6.99GHz).
+Lmagic doesn't help anymore. In fact, around Lmagic=1n, freq. jumps to 14G (and it runs with an error saying 'no convergence').
+
+xxxxx Ib=12m, wp=100u, wpmir=250u, L=0.5n, Cf=560f, wc=30u, Ibd=1m, minv1=5, minv=5, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-123, -145. PN=-120 (trans, tail), -145 (invs, tail) (all ON)
+I have too much amp. Even though it is not listed in the noise summary, I want to decrease the L and see.
+
+xxxxx Ib=12m, wp=100u, wpmir=250u, L=0.3n, Cf=1260f, wc=40u, Ibd=1m, minv1=5, minv=5, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-128, -146. PN=-125 (trans, tail), -145 (invs) (all ON)
+xxxxx Ib=12m, wp=100u, wpmir=250u, L=0.3n, Cf=1260f, wc=40u, Ibd=1m, minv1=5, minv=10, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-125 (trans, tail), -147 (1st inv, RLs) (all ON)
+xxxxx Ib=12m, wp=100u, wpmir=250u, L=0.3n, Cf=1230f, wc=40u, Ibd=1m, minv1=10, minv=10, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-125 (trans, tail), -149 (RLs, tail, CML tail) (all ON, but 7.01GHz)
+xxxxx Ib=12m, wp=100u, wpmir=250u, L=0.3n, Cf=1230f, wc=40u, Ibd=1m, minv1=10, minv=10, wl=4u, RL=3k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-125 (trans, tail), -150 (1st inv, tail) (all ON, but 7.01GHz)
+xxxxx Ib=12m, wp=100u, wpmir=250u, L=0.3n, Cf=1200f, wc=40u, Ibd=1m, minv1=15, minv=10, wl=4u, RL=3k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-125 (trans, tail), -151 (tail, RL, trans) (all ON, but 7.06GHz)
+
+Ok, I need to calibrate for the switches and see if this is all false hope.
+wc=50u now, cfixed=1220f for 7.1G. 1320f for 6.9G.
+wsw=6, C=10f reachs 6.96.
+Cha loss, I am getting the error where it randomly goes to 14G so much. Had to bring minv1 down to 10.
+wsw=10, C=10f reaches 6.93.
+wsw=20, C=10f reaches 6.92.
+wsw=20, C=12f reaches 6.88.
+
+xxxxx Ib=12m, wp=100u, wpmir=250u, L=0.3n, Cf=1220f, wc=50u, Ibd=1m, minv1=10, minv=10, wl=4u, RL=3k, vctrl=0.6, all off, Lmagic=0n:- PN=-128, -151. PN=-127, -151 (invs, tail, RL) (all ON). amp=2.1V 0-pk
+xxxxx Ib=12m, wp=100u, wpmir=250u, L=0.3n, Cf=1220f, wc=50u, Ibd=1m, minv1=15, minv=10, wl=4u, RL=3k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-127, -150 (2nd inv, tail, RL) (all ON).
+xxxxx Ib=12m, wp=100u, wpmir=250u, L=0.3n, Cf=1220f, wc=50u, Ibd=1m, minv1=15, minv=15, wl=4u, RL=3k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-128, -152 (tail, RL) (all ON).
+xxxxx Ib=12m, wp=100u, wpmir=250u, L=0.3n, Cf=1220f, wc=50u, Ibd=1m, minv1=15, minv=15, wl=4u, RL=5k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-128, -151 (tail, RL) (all ON).
+The contri from RLs is same even though 3k-5k, but worse for 1k. Is there a sweet spot? Yes at 2k.
+xxxxx Ib=12m, wp=100u, wpmir=250u, L=0.3n, Cf=1220f, wc=50u, Ibd=1m, minv1=15, minv=15, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-128, -150 (tail, RL) (all ON).
+xxxxx Ib=12m, wp=100u, wpmir=250u, L=0.3n, Cf=1220f, wc=50u, Ibd=1m, minv1=15, minv=15, wl=4u, RL=2k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-128, -153 (tail, RL) (all ON).
+Ahh, there is noise from tail of CML and from mirror MOSFET. I'll try using the multiplier ah?
+*** Made mtail=250, Ib=12m/250 for w=1u. Had to reduce minvs to 5u to avoid error of 14G.
+Oh noooo, I am at PN=-121, -147 for all OFF. PN=-120, -147 for all ON.
+Hmm, in noise summary, the mirror MOS gives most %. Faaaahh.
+
+But, using mmir=10 gives PN=-126, -148 (invs). mirror MOSFET is still 41% @1M.
+minv=(7, 10) gives 14G error.
+minv=(5, 10) gives PN=-126, -149 (still 1st inv, but I can't fix it T-T) (all ON).
+Wow, Lmagic=7n just erased the effect of the tail MOSFET and gives (-130, -150) (all OFF) (-125, -151) (all ON)
+xxxxx Ib=12m*mmir/250, wp=100u, mtail=250, mmir=10, L=0.3n, Cf=1220f, wc=50u, Ibd=1m, minv1=5, minv=10, wl=4u, RL=2k, vctrl=0.6, all off, Lmagic=7n:- PN=-130, -150. PN=-125, -151 (invs, RL) (all ON).
+Oh no, I think I was in triode this entire time (tail MOSFET).
+
+I AM NOT ABLE TO RUN A DC SIM!!!
+
+xxxxx Ib=10m*mmir/mtail, wp=150u, mtail=300, mmir=10, L=0.3n, Cf=1020f, wc=50u, Ibd=1m, minv1=5, minv=5, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0:- PN=-xxx, -xxx. PN=-116, -144 ( It is the mirror MOSFET!) (all ON).
+xxxxx Ib=10m*mmir/mtail, wp=150u, mtail=300, mmir=50, L=0.3n, Cf=1020f, wc=50u, Ibd=1m, minv1=5, minv=5, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0:- PN=-xxx, -xxx. PN=-109, -141 ( It is the mirror MOSFET!) (all ON).
+xxxxx Ib=10m*mmir/mtail, wp=150u, mtail=300, mmir=1, L=0.3n, Cf=1020f, wc=50u, Ibd=1m, minv1=5, minv=5, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0:- PN=-xxx, -xxx. PN=-108, -141 (It is the mirror MOSFET!) (all ON). 
+xxxxx Ib=10m*mmir/mtail, wp=150u, mtail=300, mmir=300, L=0.3n, Cf=1020f, wc=50u, Ibd=1m, minv1=5, minv=5, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0:- PN=-xxx, -xxx. PN=-128, -146 (invs) (all ON). 
+
+xxxxx Ib=10m*mmir/mtail, wp=150u, mtail=300, mmir=300, L=0.3n, Cf=1020f, wc=50u, Ibd=1m, minv1=5, minv=10, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0:- PN=-xxx, -xxx. PN=-125, -148 (2nd inv, tail, RL) (all ON).
+
+Ok. I have baited myself like anything. If I am using the same multiplier, I might as well use a higher current.
+xxxxx Ib=12m, wp=100u, mtail=mmir=250u, L=0.3n, Cf=1220f, wc=50u, Ibd=1m, minv1=15, minv=15, wl=4u, RL=2k, vctrl=0.6, all off, Lmagic=0n:- PN=-128, -151. PN=-128, -152 (tail, RL) (all ON). A=2.1 (0-pk)
+*** does not give 14G error in any configuration. Lmagic=1n gives 14G error even when I have mmir=250, instead of wmir=250u
+Also this feels nice, being able to alt+tab out of vnc viewer into the log without having the graphs pop up. DCF is kind of cracked.
+
+xxxxx Ib=12m, wp=100u, mtail=mmir=250u, L=0.3n, Cf=1220f, wc=50u, Ibd=1m, minv1=15, minv=15, wl=4u, RL=2.5k, vctrl=0.6, all off, Lmagic=2n:- PN=-133, -154 (1st inv, RL). PN=-130, -154 (RL, CML tail) (all ON).
+wsw=20, C=12f
+Ok, this passes, except for one problem. My 7.1G is actually 7.07G. And my KVCO also needs optimization. And I would also like to use less bias current. And I am sure it won't work when I import it to the ee6320 directory.
+So I propose, heavily, that I move to a higher I or lower L to have a but more flexibility with all this (because when I made my Cfixd=1210f, it went below -154)
+
+For L=0.2n, Cfixed=2050f, wc=65u gives 7.1G. Cf=2130 gives 6.9G
+Nooo, I need to move minv back to 5.
+msw=20, C0=12f gives 7G
+msw=20, C0=20f gives 6.9G
+
+xxxxx Ib=12m, wp=100u, mtail=mmir=250u, L=0.2n, Cf=2050f, wc=65u, Ibd=1m, minv1=5, minv=5, wl=4u, RL=2.5k, vctrl=0.6, all off, Lmagic=0n:- PN=-130, -149 (invs). PN=-127, -148 (invs) (all ON). A=1.6V (0-pk)
+xxxxx Ib=12m, wp=100u, mtail=mmir=250u, L=0.2n, Cf=2050f, wc=65u, Ibd=1m, minv1=10, minv=10, wl=4u, RL=2.5k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-125, -150 (1st inv) (all ON). BUT GIVES 14G ERROR for KVCO at 7.1G
+
+For Ib=16m:- wp=120u, mmir=mtail=300, L=0.3n, Cfixed=1140f gives 7.1G. msw=20, Csw=12f works.
+xxxxx Ib=16m, wp=120u, mtail=mmir=300, L=0.3n, Cf=1140f, wc=50u, Ibd=1m, minv1=5, minv=5, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-127, -146 (invs). PN=-127, -146 (invs) (all ON). A=2.2V (0-pk)
+xxxxx Ib=16m, wp=120u, mtail=mmir=300, L=0.3n, Cf=1130f, wc=50u, Ibd=1m, minv1=15, minv=15, wl=4u, RL=1k, vctrl=0.6, all off, Lmagic=0n:- PN=-127, -150. PN=-127, -150 (RLs) (all ON).
+xxxxx Ib=16m, wp=120u, mtail=mmir=300, L=0.3n, Cf=1130f, wc=50u, Ibd=1m, minv1=15, minv=15, wl=4u, RL=1.5k, vctrl=0.6, all off, Lmagic=0n:- PN=-127, -152. PN=-127, -152 (tail, RLs, trans) (all ON).
+
+Soo, I think the CML latch's tail was in triode for ever. It was also contributing some noise, so I want to look into that.
+xxxxx Ib=16m, wp=120u, mtail=mmir=300, L=0.3n, Cf=1130f, wc=50u, Ibd=1m, minv1=15, minv=15, ml_tail=100, wl=4u, RL=1.5k, vctrl=0.6, all off, Lmagic=0n:- PN=-127, -150. PN=-127, -150 (CML tail, tail, RL) (all ON).
+xxxxx Ib=16m, wp=120u, mtail=mmir=300, L=0.3n, Cf=1130f, wc=50u, Ibd=0.5m, minv1=15, minv=15, ml_tail=100, wl=4u, RL=1.5k, vctrl=0.6, all off, Lmagic=0n:- PN=-xxx, -xxx. PN=-127, -146 (CML tail, RL) (all ON).
+xxxxx Ib=16m, wp=120u, mtail=mmir=300, L=0.3n, Cf=1130f, wc=50u, Ibd=1.5m, minv1=15, minv=15, ml_tail=100, wl=4u, RL=1.5k, vctrl=0.6, all off, Lmagic=0n:- PN=-126, -152. PN=-127, -153 (tail, trans) (all ON). But CML tail -> triode
+
+xxxxx Ib=16m, wp=120u, mtail=mmir=300, L=0.3n, Cf=1130f, wc=50u, Ibd=1.5m, minv1=15, minv=15, ml_tail=100, wl=4u, RL=1.5k, vctrl=0.6, all off, Lmagic=2n:- PN=-134, -155. PN=-132, -155 (tail, trans) (all ON). But CML tail -> triode (final, no 14G errors). msw=20, Csw=12f
+
+All I have to do now is to import this to the ee6320 directory. I also want to check that previous passed value when I increase Ib.
+xxxxx Ib=12m, wp=100u, mtail=mmir=250, L=0.3n, Cf=1220f, wc=50u, Ibd=1m, minv1=15, minv=15, ml_tail=100, wl=4u, RL=2.5k, vctrl=0.6, all off, Lmagic=2n:- PN=-130, -152. PN=-130, -153 (CML tail, RLs) (all ON). But CML tail -> triode
+xxxxx Ib=12m, wp=100u, mtail=mmir=250, L=0.3n, Cf=1220f, wc=50u, Ibd=1.5m, minv1=15, minv=15, ml_tail=100, wl=4u, RL=2.5k, vctrl=0.6, all off, Lmagic=2n:- PN=-133, -154. PN=-131, -155 (RLs) (all ON). But CML tail -> triode
+
+Aaaannddd, my cadence is slow again. I wanted to try for Cfixed=1210f, because I wasn't kissing 7.1G for the above values. Ran after I spoke to Suthi for a while.
+xxxxx Ib=12m, wp=100u, mtail=mmir=250, L=0.3n, Cf=1215f, wc=50u, Ibd=1.5m, minv1=15, minv=15, ml_tail=100, wl=4u, RL=2.5k, vctrl=0.6, all off, Lmagic=2n:- PN=-133, -154. PN=-130, -154 (RLs) (all ON). But CML tail -> triode
+xxxxx Ib=12m, wp=100u, mtail=mmir=250, L=0.3n, Cf=1215f, wc=50u, Ibd=1.5m, minv1=15, minv=15, ml_tail=100, wl=4u, RL=2.0k, vctrl=0.6, all off, Lmagic=2n:- PN=-133, -155. PN=-129, -154 (RLs) (all ON). But CML tail -> triode (final, but might need to add more to the indiv caps.). A=2.3V (0-pk). Cha, so much wasted amplitude.
+
+I will go back to room for bath. After that:-
+Immediately. Put it in the ee6320. Problems may arise (I remember that there were negligible changes, but changes nonetheless to the values). 12mA one 1st ah?
+And submit. Without optimising. Then come back to the test library if mood is there to optimize.
+
+Looks like everything is the ditto same.
+xxxxx Ib=12m, wp=100u, mtail=mmir=250, L=0.3n, Cf=1210f, wc=55u, Ibd=1.5m, minv1=15, minv=15, ml_tail=100, wl=4u, RL=2.0k, vctrl=0.6, all off, Lmagic=2n:- PN=-131, -155. PN=-130, -154 (RLs) (all ON). Better because higher wc (and better KVCO graphs). KVCO stayed around 66 for all ON/OFF
+*** Changing the oscillator nodes or the beat frequency doesn't affect specs being met! Q1-Q1b and D-Q have same specs (noise)
+I can't believe that my reason for meeting specs was Sunku asking me to ask Rishi Nanda V for help and him giving me this realization.
+Cha, it feels so sad looking back, knowing that I aimlessly was changing stuff around, hoping for it to work; when it was a bias resistor screwing me over.
+
+Wooowww!!! The graphs for KVCO are different when I plot it from 0-1.2 and 0.2-1. Since the graphs for 0-1.2 look better, I will just zoom into them.
+
+Hmm, 33 and 36 can be done, if careful.
+For 0.225-0.775:- (C0=11.7f, C1=11.7f, C2=11.5f, C3=12f, C4=12.2f, C5=12.3f, C6=12.5f, C7=12.8f)
+7110.9-7075.1, 7088.4-7052.2, 7067.2-7031.0, 7045.2-7009.1, 7024.6-6988.5, 7002.6-6966.7, 6981.0-6945.3, 6958.1-6922.1, 6935.9-6900.0
+The decimal point keeps changing when I change my individual caps. hmm. Maybe because it couples with the OFF cap.
+Also I have to go to this stupid farewell itseems. OCD to do this is there.
+Woah, woah. I just realized. When C0=12f, f@0.225=7080, but when C0=14f, f@0.225=7087. How? Contradiction no?
+Yea, f@0.225 increased when I made it 11f also damn. What is this phenomenon?
+
+Also I wasn't sure whether we were allowed to use different caps. in the bank. We are, because the spec in the template is on the sum of caps.
+
+I can either increase C1,2,3,4,5; or increase Cfixed; or both. But, before this fine tuning, I need to check the PN at the specs asked and take a screenshot I guess.
+Oh, also I need to re-calibrate for the changes, I forgot about this.
+
+Waiiit, I ****ed up the PN @20M at all ON (-152 @20M). Yup, when I change the caps. back to 12f all, PN is fine.
+Ok, I was thinking about optimizing power and all tomorrow. But **** it all. I have spent wayyyy to much time on this already. I should do some useful work instead of this useless game they are playing with us; telling us last minute to use KVCO=70 after the /2, even though Ani specifically told me before before. At least they are accepting designs with 70MHz/V before.
+
+Dude. How is it sooo sensitive? I changed Cfixed to 1210.3f from 1210f and PN @20M fell from -154.9 to -153.9.
+Don't even ****ing care for optimizing for KVCO, use full 0-1.2 for all the ****s I give. 
+Don't even bother doing the deviation of KVCO calculation using proper intergal maths (E[x^2] and shit); it is not worth it when plotting KVCO from 0-1.2 and 0.2-1 gives completely different properties.
+Cha, mood was so good. Spoilt now before sleeping.
+
+26.4.26
+I just realized that it will be a pain to try and change my freq. ranges while keeping the PN under -154. So I will just try to fix the PN when my freq. ranges are nice.
+No, it's the invs; I can't fix that?
+
+Ok, this is not going to work; I'll just try to keep it as close to 12f as possible? But it is a 3dB drop that happened for the most minute changes; I have only 1dB to drop.
+And all this is assuming that the 7GHz point is safe.
+
+My god, do I have to look at the PN for every change in cap? Don't give a **** about the range of Vctrl ****ing up the KVCO.
+Nonononono, I don't meet the spec at 7G even though I meet it at 7.1 and 6.9. (Cf=1210f, Cb=12f).
+**** **** ****, this is true for 16m also.
+
+Chaning RL=2.5k pushes all below -154, but for the KVCOs and freq.s I am getting - I still need to check for a good one. Ah ****, KVCO is 55.
+Noooo, when I changed KVCO to 70, PN @6.9 got ****ed (1st inv).
+Ok, when I make minv1=20, noise @7G gets ****ed.
+
+Just submit the one with 50KVCO.
+For 16m:- (150-900mV) - all 12f
+7108.3-7066.5, 7092.9-7050.8, 7083.6-7041.6, 7059.0-7016.6, 7039.2-6997.5, 7021.8-6979.5, 7000.1-6958.0, 6970.5-6929.5, 6940.8-6899.8
+Mother****ing idiot. Why did you close it?
+There's no overlap at the last 2 and too much overlap at the start. If you think you can decrease the 1st few caps, try.
+Even with this, 4 sws ON touched -154.1
+
+For 16m:- (150-950mV) - all 12f
+7108.3-7063.8, 7092.9-7048.3, 7083.6-7038.9, 7059.0-7013.9, 7039.2-6994.8, 7021.8-6976.7, 7000.1-6955.2, 6970.5-6927.0, 6940.8-6897.2
+Less overlap in the last one, oof. I will increase the 1st,2nd cap and see PN.
+Wow, I made C1=12.5 and PN went to (-110, -141) at 4 ON. At 5 ON also it doesn't meet. But it does decrease freq. to 7081.9 instead of 7083.6
+
+(0.15-0.95) C1=12.2:- (all PNs fine (except 4ON, but I will show @7G with 5ON))
+7108.5-7063.9, 7091.4-7046.8, 7085.2-7039.8, 7062.3-7017.0, 7042.4-6997.4, 7019.7-6974.5, 6996.5-6951.8, 6974.7-6930.8, 6942.0-6898.5.
+Ok, so it's chill that **** all is happening (i.e. freq. increased when I increased the cap.). It just motivates me to **** off from the prject faster.
+
+Ok, its decided then; they can cut marks for the last 2 ranges overlapping by under 33%. And for my KVCO being like 55.
+7108.3-7063.8, 7092.9-7048.3, 7083.6-7038.9, 7059.0-7013.9, 7039.2-6994.8, 7021.8-6976.7, 7000.1-6955.2, 6970.5-6927.0, 6940.8-6897.2
+@6.9G at Vctrl=895.987m (all ON). Ahh, PN doesn't pass. I was naive to think it would. 7.1G passes. 7.0 doesn't.
+I laugh at these specs. Spit on them.
+Long time no punch/kick wall.
+
+The question is - do I lie or submit unmet specs? Bro ****ing results is not opening for a billion ****ing years. Playing slow cycling with bengaluru metro.
+
+Or - do I got to 20mA? I am too burnt out for this shit. Like genuinely, I just want to submit unmet specs.
+
+So at minv1=16, Cfixed=1129f. All meet PN spec. But freq. KVCO spec might be ****ed. Accept whatever the **** all **** you get and submit. Overlap won't lose you many marks I think.
+
+For (0.15-0.95), all 12f:-
+7109.1-7064.7, 7094.0-7049.6, 7079.9-7035.6, 7064.1-7018.8, 7042.5-6997.5, 7020.8-6975.9, 7000.9-6955.9, 6976.4-6932.3, 6942.2-6898.7
+Only the last overlap violates it. I can probably mitigate it by doing (0.15-1.05)
+7109.1-7059.6, 7094.0-7044.7, 7079.9-7030.6, 7064.1-7013.3, 7042.5-6992.1, 7020.8-6970.7, 7000.9-6950.5, 6976.4-6927.2, 6942.2-6893.8
+
+Important - some things changed when I moved my CML tail's top voltage from VDD to Vbias. So they won't be exactly the same as the report's. Because I am too burnt out to redo the report. But only slightly different. All 3 PNs are still under control.
+
+Avg. KVCO = integral(KVCO)/range of Vctrl = (f1-f2)/Vctrl range
+(f1-f2) = 49.5, 49.3, 49.3, 50.8, 50.4, 50.1, 50.4, 49.2, 48.4 = 49.71111 (avg.)
+Avg. KVCO = 55.234
+
+2.5.26
+Suhas Anna asked - why do we get a sine wave and not a square wave in this oscillator? I didn't answer properly.
+I should have said that the square wave current gets filtered by the RLC and gives a sine wave voltage at only the LC frequency.
+Dumb ways to die was an apt song to listen to before this viva.
+
+He also asked why the L_magic was there (working principle). This I could not have answered.
+He said that it filters out the 2nd harmonic of f, so that it cannot fold over to the phase noise of the circuit.
+He also said something related to this about why we can't use noise simulations and we have to use pnoise, but I didn't properly understand.
