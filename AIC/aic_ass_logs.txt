@@ -1,0 +1,117 @@
+5.4.26
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Ass 5:-
+
+For noise, run the standard noise analysis. Here also Jaival helped, telling me what units each noise (i/p and o/p referred) should be plotted with.
+Noise summary is given in print -> noise summary if I remember correctly (it has the percentage contribution of every element also).
+Oh yea, the CCCS in cadence is very weird; googled and found how to use. Need to refer it to the current of a 0V vdc. And the direction is also weird (un-intuitive).
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Ass MOS char:-
+How do I plot variables like gm that I need to print from the results window? I'll google and see.
+Wow, YouTube and google AI op. Use op in the calculator.
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Ass 7:-
+Huh, F8 -> properties -> options -> scale to fit window helped, but it still doesn't fit fully properly, but lite (google AI op).
+
+7.4.26
+Ah, as expected, changing m by 2 is different from changing w by 1/2 (Vdsat deviates quite a bit).
+Also Vdsat is not exactly Vgs-Vt, good to know.
+In every source (vpulse, vsin, vdc) - the DC amplitude is used for DC simulations, the AC for AC and the other parama specific to the source are used for transient simulations. So, the source doesn't have to be changed every time.
+
+8.4.26
+Calculator has a slew rate function, damn. (YouTube)
+It also has a DFT function for finding the fundamental and triplen amplitudes for HD3. (Google AI)
+
+30.4.26
+People found that their tail MOSFET was in triode. Mine was also in triode, I just didn't notice somehow.
+Initially, I found how much m1,3 should be for having the needed current for that gm. This fixes the total current in M0 and since its Vdsat was fixed, I got my I/m and m (and I).
+Since M00 and M0 have the same Vdsat, they have the same I/m. Since m00 is fixed, we know I00. Basically, sharing the same Vgs (and w_unit) shares the I/m.
+So, having a different Vdsat for all 3 tails, while having the same ID (if all w_units are fixed) => m's scale up. But m00=2, so scale I00 down.
+So now, the one where I have the 5 testbenches and the one where I have only the MOSFETs are giving different operating points T-T. Like even M00 and all - its vdsat is 190m, instead of 250m - for the same w_unit, Ib and m.
+Ok, I have no words; the same circuit, when just copy-pasted into the 5 tesbenches' schematic, just became equal to the 5 testbenches' schematics' value.
+Like, which one do I experiment on now? The stand-alone circuit pasted in test_world gave the same values as the stand-alone circuit. But the mos_char tab closely follows the 5 testbenches' one. It was the temperature. Soooo stupid dueeeee!!! One hour wasted!!!
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Ass 9:-
+
+30.4.26
+Sir said that we can make the Vdsat of M0 less than 250mV to bring it out of triode. He also said 'M00' should be changed appropriately.
+M0x=M0. M3x,4x replicas of M11,13 (same w_unit, current density => same Vdsat).
+After RFIC, see if the new values give similar results for ass7. If yes, then use the same values in ass9. And be quick. Too much time loss happened fixing ass 7 only.
+So, it is giving me Wu,loop=11MHz, BW=15M, PM=67. Why does this happen for the same gm1 and Cc? The PM plot looked wierder than before, so maybe it is some other pole (and not the dominant one causing the issue)
+I probably just need to move into the edge of saturation.
+Vdsat=200:- I00=43u, m0=12, m12=295. wu,loop=14.13M, BW=20.02M, PM=72. I'll take it. gm1=1.142m, gm2=41.19m
+
+How do I size m01 (I01=I00)? Such that M3,4 have the same currents as M1,2 (109u) i.e. M3,4 have the same Vdsat as before (-156.4m). Use mos_char. I/m=2.7u
+Will 900mV work as the bias source? No, I have to use 1.062V because that's what the next stage will need. Also putting the voltage source to bias is genius.
+Hmm, my M1,2 get crushed. The Vds values are of the right side in the single-ended. I probably just have to raise my VB56 to 1.3.
+Hmm, I have a lot more headroom now for M0; maybe I can make its Vdsat=250mV, only need to change the nmos part. Oh waiitt, my I01 also changes ugh. Looks good.
+
+Now, I have I=218u/2. I want Vg3x,4x to be 1.062V. MOS charAy namaH. Intuitively, it might be better to sweep m, but actually I think sweeping I/m is better. Think about it. I/m=7.5u.
+So things changed when I did that. 1st increase VB56 to bring the VDS1,2 back to 200. 
+So, the current flowing in M3x,4x is not 218/2. It is 70 for m01=15. So, a lot more current is flowing in M1,2 now (Ix).
+Intuition said decrease m34x, but that only worsened it.
+Should I force Ix to 0 by increasing m34x, or can I just decrease my tail current such that I1,2=106? Probably the former.
+At m34x=35, Ix changes direction.
+So m34x=30 hits, but for m0=7, Itail=255u, so Ix!=0 still.
+I can still leave it at this, but the problem is Vo1 is biased at 1.123, instead of 1.062.
+
+1.5.26
+Reducing m0 to 6 betters Ix (makes it like 9uA from 45uA), but worsens Vo1 (from 1.123 to 1.153). But surprisingly Vdsat changes by nothing (250.1m to 250.3m). Wait this means that I can increase Ix to get a closer Vo1. Heeheeheehaw. But I won't do this now, I'll save it for later.
+
+When I added the 2nd stage, the pmos current was 4.2m instead of 6.5m. I will use MOS_char to see if Vg being 1.123 instead of 1.062 is the culprit. It is.
+How do I fix? Keeping all ms same as ass7, if I increase m34x, Vg reduces (good), but I1,2 increases (bad). Can I play with both without changing any previous sizes? I only have m01 left, but I don't think that can help without affecting the pmos's params.
+Wait, am I stupid? Changing m34x did not change I1,2. It only helped the Vo1. Ix also didn't get that much more abused than it was.
+Ok, I need to write down important values. I thought m34x would change I1,2, but it didn't:-
+xxxxx I00=79u, m0=7, m01=30, m34x=29->18, mn=12, mp1=45:- Vo1=1.123->1.061, I1,2=106.1u->106.2u, I0=256.1u->250.8u, gm1,2=1.128->1.168, I34x=149.9u->144.6u. (This is for const VB56=1.35, so here, Vds1,2 have not been compensated.)
+When I change VB56 to 1.29, gm1,2 comes back down to 1.128.
+* Free increase (slight) in gm1,2 by increasing VB56.
+
+Now to add cmfb2. How do I size the opamp? No idea. Jaival confirmed that I need more BW than my overall bandwidth. But I don't know what that means wrt my transistor sizes lol.
+Cha, nothing is said about the size of Mc0 also. I'll just make it identical to the 1st stage.
+Huh, the 2nd stages' tail is not connected to Vb when CMFB is added.
+Mc34 have half the current as M0 (if mc0=2*mp1). Should I make them have half the m to have the same Vgs? Because the output will approx. be biased at a similar voltage.
+DC seems fine? But trans will reveal everything. And I don't even know what to expect from the LG of CMFB2.
+Make symbol fast fast.
+
+Oh shit, when I was testing the 2 stage opamp, I had still tied the input to vo1. Tying it to vo might push M0 to triode.
+****, everything went wrong. M0 went to triode, the Vo1cm is 1.097, which is bad.
+Yea, the 1.062 is fixable, but not the M0 getting crushed. I have to move my Vdsat to 0.2 only. Cha, massive time loss. Now I am properly getting shit-scared for PA. And as a result, I may not even be able to derive opampsummary.pdf.
+Huh, that was a lot easier than I though; the values for Vdsat=0.2 just fit right in. xxxxx I00=43u, m0=12, m01=16, m34x=18, m12=295.
+
+Wow, there are sustained oscillations from 0.4 to 1.4V. Ccm=10f:- 0.41-1.39V. Ccm=100f:- 0.5-1.3V.
+I think plotting LG will help, but inertia. Cha loss, adding the L and C disturb the tran sim. I'll just use test world I guess. Or I could use the testbench.
+I am not able to make head or tail of the LG graphs. Its PM is > 180, but then angle(LG) falls off horrifyingly. How does the angle increase with the mag never increasing?
+I'll change Ccm and see, I'll add Ccmx and see, I'll change my gms and see. What else can I do?
+Holy, adding Ccmx=100f just uprooted the ringing. 1 overshoot is there now. I plotted inclusion list Ccmx0, 100f. The LG was the exact same.
+Making Ccm=500f also does the same thing, even without a Ccmx.
+Decreasing mc12 also helps (Mc0 should not go triode), but the error voltage increases (not exactly equal to 950mV).
+Actually I am quite unsure as to what the 5% spec means. It is 5% is the max overshoot or the final overshoot? And 5% of the 50mV or the 900mV?
+Sir has settle without ringing. So I am assuming 5% of 900mv=45mV should be the maximum overshoot. Jaival said 2.5mV.
+Chaning mc34 doesn't affect anything.
+The LG graph actually doesn't explain shit.
+
+****ing hell, wu,loop is 97M and PM is 42. And just when I thought it couldn't get worse, the CLTF ****ed me in ways I never thought imaginable.
+So somehow, my tran pulse is coming properly (we don't talk about how ringing starts after the 2nd pulse and how it gives error if I run for more than 2u). Ohho, the single ended one rings nicely; it just gets cancelled early-on in the diff output. It went somehow.
+Hmm ok, for the LG, I was taking it at the output, instead of at the feedback. So when I corrected that, it came well. (because 20log8 = 60log2 = 18.6dB reduction). wu,loop=15.14M and PM=80.
+Ok, I am officially stupid. CLTF was f'ed because I didn't apply a 180 phase shift between the 2 AC waves (vi and -vi). 19.03 is the bandwidth.
+Keep in mind that my Cgd of the 2nd stage MOSFETs is exactly the same (529.7f). But gm1=1.136m (not 1.14m) and gm2=40.72m (not 40.87).
+Increasing gm2 (by decreasing m34x to 13) makes PM=81. Don't pursue this.
+
+Ok, don't drag your feet on this. Quickly plot other things (noise, other trans, HD3), then maybe let Jaival look at CMFB2 LG. Then quickly submit and look at RFIC.
+Typing in /Vop-/Vom in 'signal' didn't work. Just plotting /Vop vs ViDC doesn't give as nice a curve as I got in ass_7 (there is no real linear region and the left and right peaks are 880mV and 900mV). Or actually, there is a linear region at 0.7V. So I don't know why Nagi asked to vary from -1 to 1. Hmm actually, 0.9-0.5=0.4, 0.9+0.5=1.4. So is that what he meant?
+And /Vop and /Vom are the same.
+Hmm, so I had used VDC as ViDC and ViDC, and was sweeping from 0.4-1.4. So both were 1.4 simultaneously and 0.4 simultaneously.
+But, Jaival used VDC as 0.9-ViDC/2 and 0.9+ViDC/2, and swept ViDC from -1 to 1. So when 1 was 1.4, the other was 0.4.
+He also taught me that the slope of the DC transfer characteristics is the gain.
+And that there is some vs in the calculator to plot DC sweeps of voltages.
+
+In HD3, do I not need the DC offset in the tran part? Because the output is differential anyways. Ehh, I'll put it because I put it in ass_7 also. Oh, it legit won't matter to the input also because it is differential.
+I have to put slew rate in calculator. I have to put hd3's dft in calculator. I'll refer to ass_7 and do, but tomorrow.
