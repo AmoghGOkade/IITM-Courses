@@ -1,0 +1,18 @@
+Troubleshoot:-
+
+Changed the .cshrc license. Had to put all 3 lines from the WhatsApp screenshot for it to work. But in the default license, only the 1st line was enough.
+
+If the seg fault error comes when you run hb simulations, then try to not sweep or sweep a limited range of prf.
+
+
+
+Errors:-
+
+Make sure the Model name for nmos and pmos are as per the .scs file.
+Make sure the bulk terminals are not floating.
+
+Any errors regarding the maestro tab can be seen on the CDS.log tab, which you can find using alt+tab and then hover the mouse over Virtuoso@ Studio.
+
+If some error says "netlist can't be created. Run check and save.", run check and save on both the schematic and the test-bench. Only then it will come.
+
+If something is not working as you want, you can check the warnings also; it may give some ideas.

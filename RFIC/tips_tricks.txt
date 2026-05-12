@@ -1,0 +1,59 @@
+Basic setup:-
+1. Launch -> ADE explorer (if maestro windown is not there). If this is the 1st time you are creating a maestro window for this cell, do create new view (maestro) -> current tab
+2. Make sure setup -> Model libraries is Nagi's ibm130 file. 
+   In the schematic, the MOFET's model name should match with what is given in the .scs file (eg:- n_18_mm).
+3. Select (add to) type of simulation in the topmost icon in the task-bar
+4. Run
+
+Schematic:-
+1. 'Check and save' gives warnings in that main CDS.log terminal.
+2. Press 'o' to get options. There is some option 'dynamic highlighting of nets' or somthing; where if you hover over a net, it will show you all the connections that are there for that net.
+3. If you are in a test_bench and want to change something in the schematic, press 'e' on the symbol. It will take you there (choose edit and then current tab). Then, to come back, Ctrl+e.
+4. Shift+r to mirror
+5. Can just left click a wire to have that point as a fixed point from which you can right-angle it.
+6. Can copy components across schematics.
+7. When taking screenshots, if scroll wheel is too sensitive, just press 'f' to fit the schematic to the window.
+   7.2 If you want to take a screenshot of a part of a circuit and the scroll wheel is too sensitive, just use the zoom '+' and '-' buttons.
+
+Symbol:-
+1. In the schematic, click create -> cellview -> from cellview.
+2. Then in the window that pops up, choose wisely the top/bottom/left/right pins. The order is the order in which they will be placed also.
+
+Maestro:-
+1. In design variables, add it and click on a variable. Then click on the 3 dots that come beside it. You can sweep variables however you want using that also. 
+2. To add graphs, click on the 3rd option on the task-bar. In the description of the signal, click twice for the 3 dots to appear and then select the signal. This is best for transfer characteristics that can't be plotted using direct plot -> main form.
+   For other plots that can be plotted using direct plot-> main form, refer to point 5. in graphs.
+   For plots like gm etc. of transistors, see point 1. in calculator.
+3. Then, right click on the plot icon and do 'plot all' to plot.
+4. If you run a sweep and want to see how many points are there, the SL.No is the 1st column, don't need to count with 3fps scrolling.
+5. If you closed the Viva window, the last but one option on the right quick access bar will replot it without re-running.
+
+Graphs:-
+1. Do results -> direct plot -> main form
+2. On the miniature Viva graph, click the 4th option from the right (launch Viva). Then, it becomes big.
+3. To separate 2 graphs, click on the (almost rightmost option) 'split all strips'. To undo, click 'combine all analog traces'.
+4. To delete or highlight nets, use the filter icon on the VIVA graph. (Can select multiple nets using shift click)
+5. Right click on the graph -> add to -> ADE for the graphs to show up on their own. This is fine for the graphs that don't print anything. 
+   5.2 If they print something (like IIP3 point/ integrated NF), then do add to outputs in the main form window, otherwise you won't have anything printed.
+       This 2nd method adds a bunch of unnecessary outputs also, which you can delete from the maestro window.
+   5.3 Some things that get added when you add to outputs are actually prints. But, if you sweep, then the graphs that get plotted from these prints actually show a trend that is insightful.
+6. Right click on the graph -> toggle visible (by clicking) for hiding graphs when 2 graphs of the same type are plotted.
+7. Press 'v' for a vertical line, 'h' for a horizontal line. To have multiple of these highlighted at the same time (say for plotting), use ctrl+click.
+8. Press 'm' on a point of the graph for highlighting the point. Press 'd' at another point to get the distance of the new point from the 1st point (marked by 'm').
+9. If the grids don't appear, right click. There will be an option 'major and minor grids'.
+10. Click on the axis, then right click -> axis properties -> scale -> mode set to 'manual' -> change how much of the graph is displayed.
+
+Calculator (tools -> calculator in the maestro page):-
+1. To plot parameters like gm (things that are shown on the DC operating point print window), click on os. Choose the MOSFET and select gm from the list. Then, on the calculator window, chosee 'send buffer expression to ADE outputs' (the gear-like settings-like icon). Delete the other one that also gets sent (the oppoint one).
+2. To plot parameters vs other parameters (other than the param being swept, like gm vs Cgs), there is a waveVsWave option in the functions panel.
+3. Can use multiply (*), divided by (/) and all like normal only.
+4. To add to stack, use that green enter-like button. To remove, just use the red cross. Basically hover over all icons and read description.
+4. To plot one function *// another, (like gm/gds), have the gm active, type '/' and drag gds from the stack.
+5. There are also functions like slew for slew rates, DFT for finding the spectrum of transient signals, etc.
+
+For DC (printing/ displaying)
+1. Do results -> print -> DC node voltages/ DC operating points.
+2. Click on the nodes(s) for which you want to see the values.
+3. Do results -> annotate -> DC node voltages/ DC operating points.
+4. The schematic should have some of the required information.
+5. Instead of changing a parameter one-by-one, you can sweep it for those values. To sweep, click on sweep->component parameters and set the limits. Can plot also using main form.
